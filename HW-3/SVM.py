@@ -6,6 +6,7 @@ from matplotlib.colors import ListedColormap
 import seaborn as sns
 import scipy as sp
 import plotly.express as px
+from sklearn.svm import SVC
 
 def train_test_split(x_data, y_data=None, train_size=None, test_size=None, random_state=None, shuffle=None) -> tuple:
     """split dataset into train, validation and test
@@ -80,8 +81,8 @@ def train_test_split(x_data, y_data=None, train_size=None, test_size=None, rando
 # def guassian(x_i, z_j, sigma):
 #     return np.exp(-np.linalg.norm(x_i - z_j, axis=1)**2 / (2 * (sigma**2)))
 
-class SVM:
-    def __init__(self, C, tolerance, max_passes, kernel='linear', ploynomial_degree=None, sigma=None, epsilon=1e-5):
+class SVM_custom:
+    def __init__(self, C, tolerance, max_passes, kernel='linear', ploynomial_degree=None, sigma=0.5, epsilon=1e-5):
         self.data = None # training data
         self.label = None # training label
         self.kernel = kernel  # kernel function 'linear', 'polynomial', 'guassian'
@@ -93,18 +94,24 @@ class SVM:
         self.ploynomial_degree = ploynomial_degree  # ploynomial_degree is the degree of the polynomial for polynomial kernel
         self.sigma = sigma # sigma is the standard deviation for guassian kernel
         self.epsilon = epsilon  # epsilon is the tolerance for the error term
-    
+
     def error(self, index:int):
         return self.label[index] - self.decision_function(self.data[index])
 
-    def linear(self, x_i, z_j):
-        return np.dot(x_i, z_j.T)
+    def linear(self, x, y):
+        return np.inner(x, y)
 
     def polynomial(self, x_i, z_j, ploynomial_degree):
         return (np.dot(x_i, z_j.T) + 1) ** ploynomial_degree
 
     def gaussian(self, x_i, z_j, sigma):
         return np.exp(-np.linalg.norm(x_i - z_j)**2 / (2 * (sigma**2)))
+
+    def sigmoid(self, x, y):
+        return 1 / (1 + np.exp(-x * y))
+
+    def laplacian(self, x, y):
+        return np.exp(-np.linalg.norm(x - y)**2)
 
     def kernel_matrix(self, x_data, z_data):
         """
@@ -117,7 +124,11 @@ class SVM:
         elif self.kernel == 'polynomial':
             return self.polynomial(x_data, z_data, self.ploynomial_degree)
         elif self.kernel == 'guassian':
-            return self.guassian(x_data, z_data, self.sigma)
+            return self.gaussian(x_data, z_data, self.sigma)
+        elif self.kernel == 'sigmoid':
+            return self.sigmoid(x_data, z_data)
+        elif self.kernel == 'laplacian':
+            return self.laplacian(x_data, z_data)
         else:
             raise ValueError("kernel is not supported")
 
@@ -141,7 +152,6 @@ class SVM:
         self.alpha = np.zeros_like(self.label, dtype=np.float64)
         self.b = 0
         passes = 0 # passes is the number of passes through the data
-        error = np.zeros(num_sample)
 
         # loop until the number of passes is greater than max_passes or the difference between the current error and the previous error is less than the tolerance
         while passes < self.max_passes:
@@ -152,12 +162,12 @@ class SVM:
                 ############################################################
                 #### Calculate Error[i] = f(x^(i)) - y^(i) where f(x^(i)) is the hypothesis -> f(x) = sum(alpha_i * y^(i) * K(x^(i), x)) + b
                 ############################################################
-                error[i] = self.hypothesis(i) - self.label[i]
+                E_i = self.hypothesis(i) - self.label[i]
 
                 ############################################################
                 #### If label[i]*E_i < -tolerance and alpha_i < C or if label[i]*E_i > tolerance and alpha_i > 0
                 ############################################################
-                if ((self.label[i] * error[i] < -self.tolerance and self.alpha[i] < self.C) or (self.label[i] * error[i] > self.tolerance and self.alpha[i] > 0)):
+                if ((self.label[i] * E_i < -self.tolerance and self.alpha[i] < self.C) or (self.label[i] * E_i > self.tolerance and self.alpha[i] > 0)):
 
                     # Select j != i randomly.
                     j = i # j is the index of the sample that will be changed
@@ -167,7 +177,7 @@ class SVM:
                     ############################################################
                     ## Calculate Error[j] = f(x^(j)) - y^(j) where f(x^(j)) is the hypothesis -> f(x) = sum(alpha_i * y^(i) * K(x^(i), x)) + b
                     ############################################################
-                    error[j] = self.hypothesis(j) - self.label[j]
+                    E_j = self.hypothesis(j) - self.label[j]
 
                     # Store old alpha_i, alpha_j
                     alpha_i_old = self.alpha[i]
@@ -201,7 +211,7 @@ class SVM:
                     ############################################################
                     ## Calculate alpha_j^(new) = alpha_j^(old) - y^(j) * (E_i - E_j) / eta
                     ############################################################
-                    self.alpha[j] -= self.label[j] * (error[i] - error[j]) / eta
+                    self.alpha[j] -= self.label[j] * (E_i - E_j) / eta
 
                     # if alpha_new^(j) > H or alpha_new^(j) < L then set alpha_j^(new) = L or H else keep alpha_j^(new)
                     if self.alpha[j] > H:
@@ -222,8 +232,8 @@ class SVM:
                     ## Update b to reflect change in alpha_i, alpha_j and to take into account the new margins
                     ## b is the threshold of the SVM 
                     ############################################################
-                    b1 = self.b - error[i] - self.label[i] * (self.alpha[i] - alpha_i_old) * self.k[i, i] - self.label[j] * (self.alpha[j] - alpha_j_old) * self.k[i, j]
-                    b2 = self.b - error[j] - self.label[i] * (self.alpha[i] - alpha_i_old) * self.k[i, j] - self.label[j] * (self.alpha[j] - alpha_j_old) * self.k[j, j]
+                    b1 = self.b - E_i - self.label[i] * (self.alpha[i] - alpha_i_old) * self.k[i, i] - self.label[j] * (self.alpha[j] - alpha_j_old) * self.k[i, j]
+                    b2 = self.b - E_j - self.label[i] * (self.alpha[i] - alpha_i_old) * self.k[i, j] - self.label[j] * (self.alpha[j] - alpha_j_old) * self.k[j, j]
 
                     ############################################################
                     ## Update b based on which one is closer to 0
@@ -253,17 +263,38 @@ class SVM:
     def fit(self, data, label):
         self.data = data
         self.label = label
+        ## Calculate the kernel matrix
         self.k = self.kernel_matrix(self.data, self.data)
         self.alpha, self.b = self.sequential_minimal_optimization()
         return self
 
-    def decision_function(self, data): # data is a matrix of samples to be classified
-        # self.k = self.kernel_matrix(data, data).reshape(-1, 1) # 
-        
+    # def each_margin(self, sample):
+    #     f_x = 0
+    #     # if self.kernel == 'linear':
+    #     #     f_x +=  np.dot(self.alpha * self.label, 
+    #     # else:
+    #         for i in range(len(self.data)):
+    #             f_x += np.multiply(np.multiply(self.alpha[i], self.label[i]), self.kernel(sample, self.data[i]))
+    #     return f_x + self.b
 
+    # def margins(self, data):
+    #     return np.apply_along_axis(self.each_margin, 1, data)
+
+    # def decision_function(self, data):
+    #     return self.margins(data)
+
+    # def predict(self, data):
+    #     return np.sign(self.decision_function(data))
+
+    def decision_function(self, data):
+        y_predict = np.zeros((data.shape[0], 1))
+
+        for index in range(data.shape[0]):
+            y_predict[index] = np.sum(self.alpha * self.label.T * self.kernel_matrix(self.data, data[index, :].reshape(1, -1)))
+            # np.sum(self.kernel_matrix(data[index], data).reshape(1, -1).T.dot(self.alpha * self.label.T))
+        return y_predict + self.b 
 
     def predict(self, x_test):
-
         return np.sign(self.decision_function(x_test)) # sign function returns 1 if y > 0 else -1
 
     def score(self, y_test, y_predict):
@@ -327,20 +358,26 @@ class SVM:
     #     plt.ylabel('X_2')
     #     plt.show()
 
-    def plot_decision_boundry_2d(self,y_predict, axes):
-        plt.axes(axes) 
+    def plot_decision_boundry_2d(self, model=None, axes=None):
+        plt.axes(axes)
         xlim = [np.min(self.data[:, 0]), np.max(self.data[:, 0])] # xlim is the x-axis limits
         ylim = [np.min(self.data[:, 1]), np.max(self.data[:, 1])] # ylim is the y-axis limits 
-        xx, yy = np.meshgrid(np.linspace(*xlim, num=50), np.linspace(*ylim, num=50)) # xx and yy are the meshgrid of the x and y axis limits
+
+
+        xx, yy = np.meshgrid(np.linspace(*xlim, num=100), np.linspace(*ylim, num=100)) # xx and yy are the meshgrid of the x and y axis limits
         rgb = np.array([[210, 0, 0], [0, 0, 150]])/255.0 # rgb is the color of the points
 
-        z_model = self.decision_function(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape) # z_model is the decision function of the model i.e. the value of the hyperplane and ravel
-
+        if model is None:
+            dec = self.decision_function(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape) # z_model is the decision function of the model i.e. the value of the hyperplane and ravel
+            z_model = self.decision_function(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape) # z_model is the predicted class of the model
+        else:
+            dec = model.decision_function(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
+            z_model = model.decision_function(np.c_[xx.ravel(), yy.ravel()]).reshape(xx.shape)
         plt.scatter(self.data[:, 0], self.data[:, 1], c=self.label, s=50, cmap='autumn') # X[:, 0] is the first column of X, X[:, 1] is the second column of X and c=y means that the color of the points is the same as the class of the points
         plt.contour(xx, yy, z_model, colors='k', levels=[-1, 0, 1], alpha=0.5, linestyles=['--', '-', '--']) # levels are the levels of the contour lines
         plt.contourf(xx, yy, np.sign(z_model.reshape(xx.shape)), alpha=0.3, levels=2, cmap=ListedColormap(rgb), zorder=1)
-        plt.show()
-
+        return dec
+        
 
 # print(type(x_train))
 # print(type(y_train))
@@ -355,7 +392,7 @@ y = dataset.iloc[:, -1]
 # y = y.replace(0, -1)
 x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True)
 
-svm_linear = SVM(kernel='linear', C=10, tolerance=0.001, max_passes=100, epsilon=0.000005)
+svm_linear = SVM_custom(kernel='linear', C=10, tolerance=0.001, max_passes=100, epsilon=1e-4)
 svm_linear.fit(x_train, y_train)
 y_predict = svm_linear.predict(x_test)
 print(svm_linear.score(y_test, y_predict))
@@ -364,8 +401,13 @@ print(svm_linear.score(y_test, y_predict))
 sns.set()
 
 fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(12, 4))
-svm_linear.plot_decision_boundry_2d(y_predict, axs[0])
-svm_linear.plot_decision_boundry_2d(y_predict, axs[1])
+dec = svm_linear.plot_decision_boundry_2d(axes=axs[0])
+model = SVC(kernel='linear')
+model = model.fit(x_train, y_train)
+
+dec1 = svm_linear.plot_decision_boundry_2d(model=model, axes=axs[1])
+plt.show()
+print(dec[20], dec1[20])
 
 class_A = 1
 class_B = -1
