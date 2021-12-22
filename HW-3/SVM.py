@@ -59,13 +59,7 @@ class SVM_custom:
         else:
             raise ValueError("Kernel type not supported")
 
-
     def hypothesis(self, i):
-        # print('k[%d] = %s' % (i, self.k[i]))
-        # print(self.lagrange_multiplier)
-        # print(self.k[i])
-        # print(self.label.T)
-        # print(self.label.shape, self.label.T.shape)
         return (self.alpha * self.label.T).dot(self.k[i, :]) + self.b
 
 
@@ -267,7 +261,6 @@ class SVM_custom:
         return self.alpha, self.b, self.weight
 
     def decision_function(self, data):
-
         return np.inner(data, self.weight) + self.b
 
     def predict(self, data):
@@ -353,23 +346,19 @@ class SVM_custom:
         helper = model.decision_function(np.c_[x_mesh.ravel(), y_mesh.ravel()]).reshape(x_mesh.shape)
 
         # z_model = model.predict(np.c_[x_mesh.ravel(), y_mesh.ravel()]).reshape(x_mesh.shape)
-        
-        
-        
-        # if z_model.dtype == np.float64:
-        #     z_model = z_model.astype(np.int64)
-    
-        # print(model.get_params())
+        z_model = helper.copy()
 
-        # # alpha = model.coef_
-        # # b = model.intercept_
-        # # print("alpha values: ", alpha)
-        # # print("b values: ", b)           
+        print(model.get_params())
 
-        # plt.scatter(X[:, 0], X[:, 1], c=y, s=50, cmap='autumn')
-        # plt.contour(x_mesh, y_mesh, z_model, colors='k', levels=[-1, 0, 1], alpha=0.5, linestyles=['--', '-', '--']) # levels are the levels of the contour lines
-        # plt.contourf(x_mesh, y_mesh, np.sign(z_model.reshape(x_mesh.shape)), alpha=0.3, levels=2, cmap=ListedColormap(rgb), zorder=1)
-        # plt.title(plt_title)
+        # alpha = model.coef_
+        # b = model.intercept_
+        # print("alpha values: ", alpha)
+        # print("b values: ", b)           
+
+        plt.scatter(X[:, 0], X[:, 1], c=y, s=50, cmap='autumn')
+        plt.contour(x_mesh, y_mesh, z_model, colors='k', levels=[-1, 0, 1], alpha=0.5, linestyles=['--', '-', '--']) # levels are the levels of the contour lines
+        plt.contourf(x_mesh, y_mesh, np.sign(z_model.reshape(x_mesh.shape)), alpha=0.3, levels=2, cmap=ListedColormap(rgb), zorder=1)
+        plt.title(plt_title)
         return helper
 
     def sign(self, data):
@@ -384,81 +373,78 @@ class SVM_custom:
 
 if __name__ == '__main__':
 
-    # dataset = pd.read_csv('d1.csv', header=None)
-    # dataset.columns = ['x1', 'x2', 'y']
-    # X = dataset.iloc[:, :-1]
-    # y = dataset.iloc[:, -1]
+    part_one, part_two, part_three = False, True, False
 
-    # dataset['y'] = dataset['y'].replace(0,-1)
-    # x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, shuffle=True)
+    if part_one:
+        dataset = pd.read_csv('d1.csv', header=None)
+        dataset.columns = ['x1', 'x2', 'y']
+        X = dataset.iloc[:, :-1]
+        y = dataset.iloc[:, -1]
 
-    # # reshape y_train and y_test to be 1D
-    # y_train = y_train.reshape(-1)
-    # y_test = y_test.reshape(-1)
+        dataset['y'] = dataset['y'].replace(0,-1)
+        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, shuffle=True)
 
-    # print("test data size: ", x_test.shape, "y_test size: ", y_test.shape)
-    # print("train data size: ", x_train, "y_train size: ", y_train)
+        # reshape y_train and y_test to be 1D
+        y_train = y_train.reshape(-1)
+        y_test = y_test.reshape(-1)
 
-    # b = 0
-    # w = np.zeros((1, x_train.shape[1]))
-    # alpha = np.zeros((x_train.shape[0]))
-    # svm_linear = SVM_custom(data=x_train, label=y_train, kernel="linear", b=b, alpha=alpha, weight=w, C=1, tolerance=0.0001, max_passes=1000, epsilon=1e-5, sigma=1)
-    # alphas, bias, weight = svm_linear.fit()
-    # print("SVM _ Model: ", svm_linear)
-    # print("alphas: ", alphas)
-    # print("bias: ", bias)
-    # print("weight: ", weight[0])
-    # accuracy = svm_linear.accuracy(y_test, x_test)
-    # print("accuracy: ", accuracy)
+        print("test data size: ", x_test.shape, "y_test size: ", y_test.shape)
+        print("train data size: ", x_train, "y_train size: ", y_train)
 
-    # model = SVC(kernel='linear', verbose=True)
-    # model = model.fit(x_train, y_train)
+        b = 0
+        w = np.zeros((1, x_train.shape[1]))
+        alpha = np.zeros((x_train.shape[0]))
+        svm_linear = SVM_custom(data=x_train, label=y_train, kernel="linear", b=b, alpha=alpha, weight=w, C=1, tolerance=0.0001, max_passes=1000, epsilon=1e-5, sigma=1)
+        alphas, bias, weight = svm_linear.fit()
+        print("SVM _ Model: ", svm_linear)
+        print("alphas: ", alphas)
+        print("bias: ", bias)
+        print("weight: ", weight[0])
+        accuracy = svm_linear.accuracy(y_test, x_test)
+        print("accuracy: ", accuracy)
 
-    # # plot decision boundary
-    # fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(12, 4))
-    # svm_linear.plot_decision_boundry_2d(svm_linear, axs[0], "SVM Custom", data=np.array(X), label=np.array(y))
-    # svm_linear.plot_decision_boundry_2d(model, axs[1], "SVM Scikit-learn", data=np.array(X), label=np.array(y))
-    # plt.show()
+        model = SVC(kernel='linear', verbose=True)
+        model = model.fit(x_train, y_train)
 
-    dataset = pd.read_csv('d2.csv', header=None, names=['x1', 'x2', 'y'])
-    # dataset.columns = ['x1', 'x2', 'y']
-    X = dataset.iloc[:, :-1]
-    y = dataset.iloc[:, -1]
-    dataset['y'] = dataset['y'].replace(0,-1)
-    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, shuffle=True)
+        # plot decision boundary
+        fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(12, 4))
+        svm_linear.plot_decision_boundry_2d(svm_linear, axs[0], "SVM Custom", data=np.array(X), label=np.array(y))
+        svm_linear.plot_decision_boundry_2d(model, axs[1], "SVM Scikit-learn", data=np.array(X), label=np.array(y))
+        plt.show()
+        
+    if part_two:
+        dataset = pd.read_csv('d2.csv', header=None, names=['x1', 'x2', 'y'])
+        X = dataset.iloc[:, :-1]
+        y = dataset.iloc[:, -1]
+        dataset['y'] = dataset['y'].replace(0,-1)
+        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, shuffle=True)
 
-    y_train = y_train.reshape(-1)
-    y_test = y_test.reshape(-1)
+        y_train = y_train.reshape(-1)
+        y_test = y_test.reshape(-1)
 
-    b = 0
-    w = np.zeros((1, x_train.shape[1]))
-    alpha = np.zeros((x_train.shape[0]))
-    svm_gausssian = SVM_custom(data=x_train, label=y_train, kernel="gaussian", b=b, alpha=alpha, weight=w, C=1, tolerance=0.001, max_passes=100, epsilon=1e-5, sigma=20)
-    svm_gausssian.fit()
+        b = 0
+        w = np.zeros((1, x_train.shape[1]))
+        alpha = np.zeros((x_train.shape[0]))
+        svm_gausssian = SVM_custom(data=x_train, label=y_train, kernel="gaussian", b=b, alpha=alpha, weight=w, C=1, tolerance=0.001, max_passes=100, epsilon=1e-5, sigma=20)
+        svm_gausssian.fit()
 
-    model = SVC(kernel='rbf', gamma=10, verbose=True)
-    model = model.fit(x_train, y_train)
-    # plot decision boundary
-    fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(12, 4))
-    z=svm_gausssian.plot_decision_boundry_2d(svm_gausssian, axs[1], "SVM Custom", data=np.array(X), label=np.array(y))
-    z1=svm_gausssian.plot_decision_boundry_2d(model, axs[0], "SVM Scikit-learn", data=np.array(X), label=np.array(y))
+        model = SVC(kernel='rbf', gamma=10, verbose=True)
+        model = model.fit(x_train, y_train)
+        # plot decision boundary
+        fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(12, 4))
+        z=svm_gausssian.plot_decision_boundry_2d(svm_gausssian, axs[0], "SVM Custom", data=np.array(X), label=np.array(y))
+        z1=svm_gausssian.plot_decision_boundry_2d(model, axs[1], "SVM Scikit-learn", data=np.array(X), label=np.array(y))
 
-    plt.show()
-    print("SVM _ Model: ", svm_gausssian)
+        plt.show()
+        print("SVM _ Model: ", svm_gausssian)
 
-    # save to txt file 
-    with open('./z.txt', 'w') as f:
-        for item in z:
-            f.write("%s\n" % item)
-    with open('./z1.txt', 'w') as f:
-        for item in z1:
-            f.write("%s\n" % item)
-
-    # show where the model is wrong
-    # print(z[:10], z1[:10])
-    # print(z.shape, z1.shape)
-    # # if all elements in z == z1, then the print True
-    # print(np.all(z == z1))
+        # save to txt file 
+        with open('./z.txt', 'w') as f:
+            for item in z:
+                f.write("%s\n" % item)
+        with open('./z1.txt', 'w') as f:
+            for item in z1:
+                f.write("%s\n" % item)
 
 
 
@@ -474,37 +460,3 @@ if __name__ == '__main__':
 # dec1 = svm_linear.plot_decision_boundry_2d(model=model, axes=axs[1])
 # plt.show()
 # print(dec[20], dec1[20])
-
-# class_A = 1
-# class_B = -1
-
-# def confusion_matrix(y_test, y_predict):
-#     TP = 0
-#     FP = 0
-#     TN = 0
-#     FN = 0
-#     for i in range(len(y_test)):
-#         if y_test[i] == class_A and y_predict[i] == class_A:
-#             TP += 1
-#         elif y_test[i] == class_A and y_predict[i] == class_B:
-#             FN += 1
-#         elif y_test[i] == class_B and y_predict[i] == class_A:
-#             FP += 1
-#         elif y_test[i] == class_B and y_predict[i] == class_B:
-#             TN += 1
-#     # return TP, FP, TN, FN as a matrix
-#     return np.array([[TP, FP], [FN, TN]])
-
-# def plot_confusion(y_test, y_predict):
-#     mat = confusion_matrix(y_test, y_predict)
-#     plt.figure(figsize=(10, 10))
-#     sns.heatmap(mat.T, square=True, annot=True, fmt='d', cbar=False,
-#                 xticklabels=['Predicted Class 0', 'Predicted Class 1'], yticklabels=['Actual Class 0', 'Actual Class 1'])
-#     plt.xlabel('true label')
-#     plt.ylabel('predicted label')
-#     plt.show()
-
-# # print('Custom SVM:')
-# # plot_confusion(y_test, y_predict)
-
-# print(np.c_[y_test[:10], y_predict[:10]])
