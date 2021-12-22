@@ -330,9 +330,9 @@ class SVM_custom:
 
 if __name__ == '__main__':
 
-    part_one    = True
+    part_one    = False
     part_two    = False
-    part_three  = False
+    part_three  = True
     part_four   = False
     part_five   = False
 
@@ -386,7 +386,6 @@ if __name__ == '__main__':
         custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=sklearn_model, axes=axs[1], plt_title="::SKLearn-SVM::")
         plt.show()
 
-
     if part_two:
         # Todo:
         # Implement gaussian kernel
@@ -412,25 +411,26 @@ if __name__ == '__main__':
         y_train = y_train.reshape(-1)
         y_test = y_test.reshape(-1)
 
+        C = 1
         b = 0
+        sigma = 0.1
+        max_passes = 5
+        verbose = False
+        epsilon = 1e-5
+        tolerance = 0.001
         w = np.zeros((1, x_train.shape[1]))
         alpha = np.zeros((x_train.shape[0]))
-        svm_gausssian = SVM_custom(data=x_train, label=y_train, kernel="gaussian", b=b, alpha=alpha,
-                                   weight=w, C=1, tolerance=0.001, max_passes=5, epsilon=1e-5, sigma=0.1)
-        svm_gausssian.fit()
+        custom_model = SVM_custom(x_train, y_train, kernel='gaussian', C=C, tolerance=tolerance, max_passes=max_passes, epsilon=epsilon, b=b, weight=w, alpha=alpha, sigma=sigma, verbose=verbose)
+        custom_model.fit()
 
-        model = SVC(kernel='rbf', gamma=10, verbose=True)
-        model = model.fit(x_train, y_train)
+        sklearn_model = SVC(kernel='rbf', C=C, tol=tolerance, max_iter=max_passes, verbose=verbose, gamma=0.1)
+        sklearn_model.fit(x_train, y_train)
 
         # plot decision boundary
         fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(12, 4))
-        z = svm_gausssian.plot_decision_boundry_2d(
-            svm_gausssian, axs[0], "SVM Custom", data=np.array(X), label=np.array(y))
-        z1 = svm_gausssian.plot_decision_boundry_2d(
-            model, axs[1], "SVM Scikit-learn", data=np.array(X), label=np.array(y))
-
+        z = custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=custom_model, axes=axs[0], plt_title="::Custom SVM::")
+        z1 = custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=sklearn_model, axes=axs[1], plt_title="::SKLearn-SVM::")
         plt.show()
-        print("SVM _ Model: ", svm_gausssian)
 
         # save decision_function_result to txt file
         with open('./z.txt', 'w') as f:
