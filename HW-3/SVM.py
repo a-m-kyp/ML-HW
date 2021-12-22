@@ -265,7 +265,7 @@ class SVM_custom:
         return np.sum(self.alpha > 0)
 
     def get_params(self):
-        return {'kernel type': self.kernel, 'C': self.C, 'tolerance': self.tolerance, 'max_passes': self.max_passes, 'epsilon': self.epsilon, 'degree': self.p_degree, 'gamma': self.sigma, 'coeffs': self.weight, 'b': self.b}
+        return {'kernel type': self.kernel, 'C': self.C, 'tolerance': self.tolerance, 'max_passes': self.max_passes, 'epsilon': self.epsilon, 'degree': self.p_degree, 'gamma': self.sigma, 'coeffs': [*self.weight.flatten()], 'bias': self.b}
 
     def set_params(self, **parameters):
         for parameter, value in parameters.items():
@@ -276,9 +276,9 @@ class SVM_custom:
         represent = "::\n Kernel_type: {}\nC: {:.2f}\nTolerance: {:.2f}\nMax_passes: {}\nEpsilon: {:.2f} \n Weight".format(
             self.kernel, self.C, self.tolerance, self.max_passes, self.epsilon, self.b, self.weight)
         if self.kernel == 'polynomial':
-            represent += "\tDegree: {}:".format(self.p_degree)
+            represent += "\tdegree: {}:".format(self.p_degree)
         elif self.kernel == 'rbf' or self.kernel == 'gauassian':
-            represent += "\tSigma: {:.2f}".format(self.sigma)
+            represent += "\tsigma: {:.2f}".format(self.sigma)
         return represent
 
     def plot_decision_boundry_2d(self, model, axes, plt_title, data, label):
@@ -337,10 +337,10 @@ if __name__ == '__main__':
         dataset = pd.read_csv('d1.csv', header=None, names=['x1', 'x2', 'y'])
         X = dataset.iloc[:, :-1]
         y = dataset.iloc[:, -1]
-        y = y.replace(0, -1)
+        dataset['y'] = dataset['y'].replace(0, -1)
 
         x_train, x_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2)
+            X, y, test_size=0.18)
 
         y_train = y_train.reshape(-1)
         y_test = y_test.reshape(-1)
@@ -364,15 +364,15 @@ if __name__ == '__main__':
         print(model_result)
 
         Optimal_C = model_result.loc[model_result['accuracy'].idxmax()]['C']
-        model = SVM_custom(x_train, y_train, kernel='linear', C=Optimal_C, tolerance=tolerance, max_passes=max_passes, epsilon=epsilon, b=b, weight=w, alpha=alpha)
-        model.fit()
+        custom_model = SVM_custom(x_train, y_train, kernel='linear', C=Optimal_C, tolerance=tolerance, max_passes=max_passes, epsilon=epsilon, b=b, weight=w, alpha=alpha)
+        custom_model.fit()
 
-        sklearn_model = SVC(kernel='linear', C=Optimal_C, tol=tolerance, max_iter=max_passes, epsilon=epsilon)
+        sklearn_model = SVC(kernel='linear', C=Optimal_C, tol=tolerance, max_iter=max_passes, verbose=True)
         sklearn_model.fit(x_train, y_train)
 
-        fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(12, 4))
-        model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=model, axs=axs[0], plt_title="::Custom SVM::")
-        model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=sklearn_model, axs=axs[1], plt_title="::SKLearn-SVM::")
+        fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(18, 8))
+        custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=custom_model, axes=axs[0], plt_title="::Custom SVM::")
+        custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=sklearn_model, axes=axs[1], plt_title="::SKLearn-SVM::")
         plt.show()
 
 
@@ -390,6 +390,9 @@ if __name__ == '__main__':
         print("gaussian kernel result: ", kernel_result)
 
     if part_three:
+        # Todo:
+        # Implement gaussian kernel on d2.csv
+        # Consider C = 1, sigma = 0.1, tolerance = 0.001, max_passes = 5, epsilon = 0.001
         dataset = pd.read_csv('d2.csv', header=None, names=['x1', 'x2', 'y'])
         X = dataset.iloc[:, :-1]
         y = dataset.iloc[:, -1]
