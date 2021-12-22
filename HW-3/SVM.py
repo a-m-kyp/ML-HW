@@ -55,6 +55,7 @@ class SVM_custom:
             # return self.poly_kernel(self.data[None,:, :], self.data[:,None, :], self.p_degree)
             return self.poly_kernel(self.data, self.data, self.p_degree)
         elif kernel == "gaussian":
+            # return self.gaussian_kernel(self.data[None, :, :], self.data[:, None, :], self.sigma, axis=2)           
             return self.gaussian_matrix(self.data, self.sigma)
         else:
             raise ValueError("Kernel type not supported")
