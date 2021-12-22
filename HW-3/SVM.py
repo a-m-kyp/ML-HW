@@ -370,18 +370,3 @@ if __name__ == '__main__':
         with open('./z1.txt', 'w') as f:
             for item in z1:
                 f.write("%s\n" % item)
-
-
-
-# y_predict = svm_linear.predict(x_test)
-# print(svm_linear.score(y_test, y_predict))
-# svm_linear.plot_decision_boundry(x_test, y_predict)
-
-# sns.set()
-
-# fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(12, 4))
-# dec = svm_linear.plot_decision_boundry_2d(axes=axs[0])
-
-# dec1 = svm_linear.plot_decision_boundry_2d(model=model, axes=axs[1])
-# plt.show()
-# print(dec[20], dec1[20])
