@@ -287,8 +287,8 @@ class SVM_custom:
     def plot_decision_boundry_2d(self, model, axes, plt_title, data, label):
         plt.axes(axes)
 
-        X = data
-        y = label
+        X = data.copy()
+        y = label.copy()
 
         x_limit = [np.min(X[:, 0]), np.max(X[:, 0])]
         y_limit = [np.min(X[:, 1]), np.max(X[:, 1])]
