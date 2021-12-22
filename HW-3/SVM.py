@@ -311,8 +311,12 @@ class SVM_custom:
         return represent
 
     def get_support_vector_indices(self):
-        return np.where(self.alpha > 0)[0]
+        self.support_vectors_indices_ = np.where(self.alpha > 0)[0]
+        return self.support_vectors_indices_
 
+    def get_support_vector_(self):
+        self.support_vectors_ = self.data[self.get_support_vectors_indices()]
+        return self.support_vectors_
 
     def plot_decision_boundry_2d(self, model, plt_title, data, label, axes=None):
         if axes is None:
@@ -347,13 +351,44 @@ class SVM_custom:
 
         return helper
 
+    def decision_boundary(self, model, plt_title, data, label, ax=None):
+        if ax is None:
+            ax = plt.gca()
+        else:
+            ax = plt.axes(ax)
+
+        X = data.copy()
+        y = label.copy()
+
+        
+
+        xlim = [np.min(X[:, 0]), np.max(X[:, 0])]
+        ylim = [np.min(X[:, 1]), np.max(X[:, 1])]
+
+        x = np.linspace(xlim[0], xlim[1], 100)
+        y = np.linspace(ylim[0], ylim[1], 100)
+        Y, X = np.meshgrid(y, x)
+        xy = np.vstack([X.ravel(), Y.ravel()]).T
+        P = model.decision_function(xy).reshape(X.shape)
+
+        ax.contour(X, Y, P, colors='k', levels=[-1, 0, 1], alpha=0.5,
+               linestyles=['--', '-', '--'])
+        
+        # ax.scatter(model.support_vectors_[:, 0], model.support_vectors_[:, 1], s=100, c='k', marker='o', label='Support Vectors')
+
+        ax.set_xlim(xlim)
+        ax.set_ylim(ylim)
+        ax.set_title(plt_title)
+
+
+
 if __name__ == '__main__':
 
-    part_one    = False
+    part_one    = True
     part_two    = False
     part_three  = False
     part_four   = False
-    part_five   = True
+    part_five   = False
 
     if part_one:
         # Todo:
@@ -398,11 +433,18 @@ if __name__ == '__main__':
         sklearn_model = SVC(kernel='linear', C=Optimal_C, tol=tolerance, max_iter=max_passes, verbose=False)
         sklearn_model.fit(x_train, y_train)
 
-        fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(18, 8))
 
         # Todo: decision boundry for custom model is not working
-        custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=custom_model, axes=axs[0], plt_title="::Custom SVM::")
-        custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=sklearn_model, axes=axs[1], plt_title="::SKLearn-SVM::")
+        # fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(18, 8))
+        # custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=custom_model, axes=axs[0], plt_title="::Custom SVM::")
+        # custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=sklearn_model, axes=axs[1], plt_title="::SKLearn-SVM::")
+        # plt.show()
+
+        custom_model.get_support_vector_()
+
+        fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(18, 8))
+        custom_model.decision_boundary(model=custom_model, plt_title="::Custom SVM::", data=np.array(X), label=np.array(y), ax=axs[0])
+        custom_model.decision_boundary(model=sklearn_model, plt_title="::SKLearn-SVM::", data=np.array(X), label=np.array(y), ax=axs[1])
         plt.show()
 
     if part_two:
@@ -562,11 +604,8 @@ if __name__ == '__main__':
         # replace 0 to -1 in column y
         df['y'] = df['y'].replace(0, -1)
 
-
         x_validation = df.iloc[:, :-1]
         y_validation = df.iloc[:, -1]
-
-
 
         print(x_validation)
 
@@ -582,7 +621,11 @@ if __name__ == '__main__':
                                     weight=w, C=C, sigma=sigma, tolerance=0.001, max_passes=100, epsilon=1e-5)
         svm_gausssian.fit()
         
+        # fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+        # svm_gausssian.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=svm_gausssian, plt_title="::Train Data::", axes=axs[0])
+        # svm_gausssian.plot_decision_boundry_2d(data=np.array(x_validation), label=np.array(y_validation), model=svm_gausssian, plt_title="::Validation Data::", axes=axs[1])
+        # plt.show()
+
         fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-        svm_gausssian.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=svm_gausssian, plt_title="::Train Data::", axes=axs[0])
-        svm_gausssian.plot_decision_boundry_2d(data=np.array(x_validation), label=np.array(y_validation), model=svm_gausssian, plt_title="::Validation Data::", axes=axs[1])
+        svm_gausssian.decision_boundary(data=np.array(X), label=np.array(y), model=svm_gausssian, plt_title="::Train Data::", ax=axs[0])
         plt.show()
