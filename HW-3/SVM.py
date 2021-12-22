@@ -297,16 +297,8 @@ class SVM_custom:
         rgb = np.array([[210, 0, 0], [0, 0, 150]])/255.0 # rgb is the color of the points
         
         helper = model.decision_function(np.c_[x_mesh.ravel(), y_mesh.ravel()]).reshape(x_mesh.shape)
-
-        # z_model = model.predict(np.c_[x_mesh.ravel(), y_mesh.ravel()]).reshape(x_mesh.shape)
         z_model = helper.copy()
-
-        print(model.get_params())
-
-        # alpha = model.coef_
-        # b = model.intercept_
-        # print("alpha values: ", alpha)
-        # print("b values: ", b)           
+        print(model.get_params()) 
 
         plt.scatter(X[:, 0], X[:, 1], c=y, s=50, cmap='autumn')
         plt.contour(x_mesh, y_mesh, z_model, colors='k', levels=[-1, 0, 1], alpha=0.5, linestyles=['--', '-', '--']) # levels are the levels of the contour lines
