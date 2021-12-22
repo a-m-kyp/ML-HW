@@ -1,7 +1,9 @@
+from math import gamma
 from os import name
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from sklearn import svm
 from sklearn.svm import SVC
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
@@ -170,7 +172,8 @@ class SVM_custom:
                     # need to handle it
                     ############################################################
                     if eta >= 0:
-                        print("eta>=0")
+                        if self.verbose:
+                            print("eta>=0")
                         continue
 
                     self.alpha[j] -= y_j * (E_i - E_j) / eta
@@ -249,7 +252,11 @@ class SVM_custom:
     def fit(self):
         self.sequential_minimal_optimization()
         return self.alpha, self.b, self.weight
-    
+
+    def f(self, data): # 
+        # return (-self.weight[0][0] * data - self.b + self.C) / self.weight[0][1]
+        return 
+
     def sign(self, data):
         w_T_x_plus_b = np.inner(data, self.weight) + self.b
         positive = (1) * (w_T_x_plus_b >= 0)
@@ -259,6 +266,13 @@ class SVM_custom:
 
     def accuracy(self, y_true, x_test):
         return np.mean(y_true == self.sign(x_test))
+
+    def test(self, x_test, y_test):
+        fx = self.f(x_test)
+        positive = (1) * (fx >= 0)
+        negative = (-1) * (fx < 0)
+        pred =  positive + negative
+        return np.mean(y_test == pred)
 
     def decision_function(self, data):
         return np.inner(data, self.weight) + self.b
@@ -272,14 +286,12 @@ class SVM_custom:
     def functional_margin(self, data): 
         return self.label * (self.weight.T @ data + self.b).flatten()
 
-    def f(self, data): # 
-        return (-self.weight[0] * data - self.b + self.C) / self.weight[1]
-
     def get_support_vectors_indices(self):
         return np.where(self.alpha > 0)[0]
 
     def num_support_vectors(self):
         return np.sum(self.alpha > 0)
+
 
     def get_params(self):
         return {'kernel type': self.kernel, 'C': self.C, 'tolerance': self.tolerance, 'max_passes': self.max_passes, 'epsilon': self.epsilon, 'degree': self.p_degree, 'gamma': self.sigma, 'coeffs': [*self.weight.flatten()], 'bias': self.b}
@@ -298,8 +310,15 @@ class SVM_custom:
             represent += "\tsigma: {:.2f}".format(self.sigma)
         return represent
 
-    def plot_decision_boundry_2d(self, model, axes, plt_title, data, label):
-        plt.axes(axes)
+    def get_support_vector_indices(self):
+        return np.where(self.alpha > 0)[0]
+
+
+    def plot_decision_boundry_2d(self, model, plt_title, data, label, axes=None):
+        if axes is None:
+            plt.gca()
+        else:
+            plt.axes(axes)
 
         X = data.copy()
         y = label.copy()
@@ -307,13 +326,13 @@ class SVM_custom:
         x_limit = [np.min(X[:, 0]), np.max(X[:, 0])]
         y_limit = [np.min(X[:, 1]), np.max(X[:, 1])]
 
-        x_mesh, y_mesh = np.meshgrid(np.linspace(
-            *x_limit, 300), np.linspace(*y_limit, 300))
-        rgb = np.array([[210, 0, 0], [0, 0, 150]]) / \
-            255.0  # rgb is the color of the points
+        x_mesh, y_mesh = np.meshgrid(np.linspace(*x_limit, 300), np.linspace(*y_limit, 300))
+        rgb = np.array([[210, 0, 0], [0, 0, 150]]) / 255.0  # rgb is the color of the points
 
         helper = model.decision_function(
             np.c_[x_mesh.ravel(), y_mesh.ravel()]).reshape(x_mesh.shape)
+
+        # helper = model.predict(np.c_[x_mesh.ravel(), y_mesh.ravel()]).reshape(x_mesh.shape)
         z_model = helper.copy()
 
         # if self.verbose:
@@ -323,18 +342,43 @@ class SVM_custom:
 
         plt.scatter(X[:, 0], X[:, 1], c=y, s=50, cmap='autumn')
         # levels are the levels of the contour lines
-        plt.contour(x_mesh, y_mesh, z_model, colors='k', levels=[-1, 0, 1], alpha=0.5, linestyles=['--', '-', '--'])
         plt.contourf(x_mesh, y_mesh, np.sign(z_model.reshape(x_mesh.shape)), alpha=0.3, levels=2, cmap=ListedColormap(rgb), zorder=1)
+        plt.contour(x_mesh, y_mesh, z_model, colors='k', levels=[-1, 0, 1], alpha=0.5, linestyles=['--', '-', '--'])
         plt.title(plt_title)
+
+        # plt.figure(figsize=(10, 10))
+        # sns.scatterplot(X[:, 0], X[:, 1], hue=y, s=50, cmap='autumn')
+        # w = model.weight.tolist()[0]
+        # b = model.b
+        # x_points = np.linspace(-1, 1)
+        # y_points = - (w[0] / w[1]) * x_points - (b / w[1])
+
+        # plt.plot(x_points, y_points, 'k-', linewidth=2)
+
+        # # Encircle the support vectors
+        # for i in model.get_support_vectors_indices():
+        #     plt.scatter(X[i, 0], X[i, 1], s=50, facecolors='none', edgecolors='k')
+
+        # w_hat = w / np.linalg.norm(w)
+        # margin = 1 / np.linalg.norm(w)
+
+        # decision_boundary_points = np.array(list(zip(x_points, y_points)))
+        # points_of_line_above = decision_boundary_points[np.where(decision_boundary_points[:, 1] > 0)]
+        # points_of_line_below = decision_boundary_points[np.where(decision_boundary_points[:, 1] < 0)]
+
+        # plt.plot(points_of_line_above[:, 0], points_of_line_above[:, 1], 'k-', linewidth=2)
+        # plt.plot(points_of_line_below[:, 0], points_of_line_below[:, 1], 'k-', linewidth=2)
+        # plt.show()
+
         return helper
 
 if __name__ == '__main__':
 
     part_one    = False
     part_two    = False
-    part_three  = True
+    part_three  = False
     part_four   = False
-    part_five   = False
+    part_five   = True
 
     if part_one:
         # Todo:
@@ -423,7 +467,42 @@ if __name__ == '__main__':
         custom_model = SVM_custom(x_train, y_train, kernel='gaussian', C=C, tolerance=tolerance, max_passes=max_passes, epsilon=epsilon, b=b, weight=w, alpha=alpha, sigma=sigma, verbose=verbose)
         custom_model.fit()
 
-        sklearn_model = SVC(kernel='rbf', C=C, tol=tolerance, max_iter=max_passes, verbose=verbose, gamma=0.1)
+        # calculate support_vector
+        support_vector_indices = []
+        for i in range(len(custom_model.alpha)):
+            if custom_model.alpha[i] > 0:
+                support_vector_indices.append(i)
+        print("support_vector_indices: ", support_vector_indices)
+
+        # calculate dual_coef
+        dual_coef = []
+        for i in range(len(custom_model.alpha)):
+            if custom_model.alpha[i] > epsilon:
+                dual_coef.append(custom_model.label[i] * custom_model.alpha[i])
+        print("dual_coef: ", dual_coef)
+        
+        # calculate intercept of custom_model
+        intercept = 0
+        for i in range(len(custom_model.alpha)):
+            if custom_model.alpha[i] > epsilon:
+                intercept += custom_model.label[i] * custom_model.alpha[i] * custom_model.gaussian_kernel(custom_model.data[i], custom_model.data[support_vector_indices[0]], sigma=sigma)
+        intercept -= custom_model.b
+        print("intercept: ", intercept)
+
+        support_vector_indices = np.array(support_vector_indices)
+        dual_coef = np.array(dual_coef)
+
+        # calculate decision_function
+        # diff = support_vector - z_scaled
+        # note: z_scaled = (x - mean) / std
+        # diff = x_train[support_vector_indices] - x_train[support_vector_indices].mean(axis=0)
+        # diff = diff / diff.std(axis=0)
+        # norm2 = np.linalg.norm(diff, axis=1)
+        # dec_func_vec = -1 * (dual_coef.dot(np.exp(-sigma* (norm2**2)))) - intercept
+        # print("decision_function: ", dec_func_vec)
+
+
+        sklearn_model = SVC(kernel='rbf', C=C, tol=tolerance, max_iter=max_passes, gamma=sigma, verbose=verbose)
         sklearn_model.fit(x_train, y_train)
 
         # plot decision boundary
@@ -431,6 +510,7 @@ if __name__ == '__main__':
         z = custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=custom_model, axes=axs[0], plt_title="::Custom SVM::")
         z1 = custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=sklearn_model, axes=axs[1], plt_title="::SKLearn-SVM::")
         plt.show()
+
 
         # save decision_function_result to txt file
         with open('./z.txt', 'w') as f:
@@ -461,6 +541,8 @@ if __name__ == '__main__':
         X_validation = validation_set.iloc[:, :-1]
         y_validation = validation_set.iloc[:, -1]
         y_validation = y_validation.replace(0, -1)
+        x_validation = X_validation.values
+        y_validation = y_validation.ravel()
 
         b = 0
         w = np.zeros((1, x_train.shape[1]))
@@ -476,12 +558,56 @@ if __name__ == '__main__':
                 svm_gausssian.fit()
                 accuracy = svm_gausssian.accuracy(y_validation, X_validation)
                 model_result.append([C, sigma, accuracy])
-
+                print("model result: ", model_result[-1])
 
         # choose the model with highest accuracy
         model_result = np.array(model_result)
         model_result = model_result[model_result[:, 2].argsort()]
         print(model_result[-1])
+        optimal_C, optimal_sigma = model_result[-1][0], model_result[-1][1]
 
     if part_five:
-        pass
+        # Todo:
+        # Plot the decision boundary of the model with highest accuracy
+        # Use SVM with gaussian kernel on d3.csv and d3-validation.csv
+
+        dataset = pd.read_csv('d3.csv', header=None, names=['x1', 'x2', 'y'])
+
+        X = dataset.iloc[:, :-1]
+        y = dataset.iloc[:, -1]
+        y = y.replace(0, -1)
+        x_train, x_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.3, shuffle=True)
+
+        y_train = y_train.reshape(-1)
+        y_test = y_test.reshape(-1)
+
+        df = pd.read_csv("d3-validation.csv", header=None, names=['x1', 'x2', 'y'])
+        print(df.head().reset_index())
+        # replace 0 to -1 in column y
+        df['y'] = df['y'].replace(0, -1)
+
+
+        x_validation = df.iloc[:, :-1]
+        y_validation = df.iloc[:, -1]
+
+
+
+        print(x_validation)
+
+        print("x_train: ", x_validation.shape, "y_train: ", y_validation.shape)
+        print("x_test: ", x_test.shape, "y_test: ", y_test.shape)
+        print("x_validation: ", x_validation.shape, "y_validation: ", y_validation.shape)
+        b = 0
+        C = 0.001
+        sigma = 0.001
+        w = np.zeros((1, x_train.shape[1]))
+        alpha = np.zeros((x_train.shape[0]))
+        svm_gausssian = SVM_custom(data=x_train, label=y_train, kernel="gaussian", b=b, alpha=alpha, 
+                                    weight=w, C=C, sigma=sigma, tolerance=0.001, max_passes=100, epsilon=1e-5)
+        svm_gausssian.fit()
+        
+        fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+        svm_gausssian.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=svm_gausssian, plt_title="::Train Data::", axes=axs[0])
+        svm_gausssian.plot_decision_boundry_2d(data=np.array(x_validation), label=np.array(y_validation), model=svm_gausssian, plt_title="::Validation Data::", axes=axs[1])
+        plt.show()
