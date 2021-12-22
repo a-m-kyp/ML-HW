@@ -4,6 +4,7 @@ import seaborn as sns
 from sklearn.svm import SVC
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
+from sklearn.utils import validation
 from utils import train_test_split, confusion_matrix, classification_report
 
 sns.set()
@@ -74,7 +75,6 @@ class SVM_custom:
         b: threshold
         return self.lagrange_multipliers, bias
         """
-        # initialize alpha, b, passes, weight
         num_sample, num_feature = self.data.shape
         passes = 0
         while passes < self.max_passes:
@@ -105,7 +105,8 @@ class SVM_custom:
                     # Select j != i randomly.
                     j = i  # j is the index of the sample that will be changed
                     while j == i:
-                        j = np.random.choice(num_sample)
+                        # get j from 0 to num_sample-1
+                        j = np.random.randint(0, num_sample)
 
                     # print("i, j: ", i, j)
 
@@ -320,9 +321,9 @@ class SVM_custom:
 
 if __name__ == '__main__':
 
-    part_one = True
+    part_one = False
     part_two = False
-    part_three = False
+    part_three = True
 
     if part_one:
         dataset = pd.read_csv('d1.csv', header=None)
@@ -403,3 +404,49 @@ if __name__ == '__main__':
         with open('./z1.txt', 'w') as f:
             for item in z1:
                 f.write("%s\n" % item)
+
+    if part_three:
+        # Todo:
+        # Use SVM with gaussian kernel on d3.csv
+        # C and sigma range is [30, 10, 3, 1, 0.3, 0.1, 0.03, 0.01, 0.003, 0.001]
+        # Then check the accuracy of each model with different C and sigma on d3-validation.csv
+        # get optimal C and sigma of the model with highest accuracy
+
+        dataset = pd.read_csv('d3.csv', header=None, names=['x1', 'x2', 'y'])
+        X = dataset.iloc[:, :-1]
+        y = dataset.iloc[:, -1]
+        y = y.replace(0, -1)
+        x_train, x_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.3, shuffle=True)
+
+        y_train = y_train.reshape(-1)
+        y_test = y_test.reshape(-1)
+
+        validation_set = pd.read_csv('d3-validation.csv', header=None, names=['x1', 'x2', 'y'])
+        X_validation = validation_set.iloc[:, :-1]
+        y_validation = validation_set.iloc[:, -1]
+        y_validation = y_validation.replace(0, -1)
+
+        b = 0
+        w = np.zeros((1, x_train.shape[1]))
+        alpha = np.zeros((x_train.shape[0]))    
+        C_list = [30, 10, 3, 1, 0.3, 0.1, 0.03, 0.01, 0.003, 0.001]
+        sigma_list = [30, 20, 10, 3, 1, 0.3, 0.1, 0.03, 0.01, 0.003, 0.001]
+
+        model_result = []
+        for C in C_list:
+            for sigma in sigma_list:
+                svm_gausssian = SVM_custom(data=x_train, label=y_train, kernel="gaussian", b=b, alpha=alpha,
+                                           weight=w, C=C, tolerance=0.001, max_passes=100, epsilon=1e-5, sigma=sigma)
+                svm_gausssian.fit()
+                accuracy = svm_gausssian.accuracy(y_validation, X_validation)
+                model_result.append([C, sigma, accuracy])
+
+
+        # choose the model with highest accuracy
+        model_result = np.array(model_result)
+        model_result = model_result[model_result[:, 2].argsort()]
+        print(model_result[-1])
+
+        
+
