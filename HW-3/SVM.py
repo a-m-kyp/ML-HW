@@ -315,7 +315,11 @@ class SVM_custom:
         helper = model.decision_function(
             np.c_[x_mesh.ravel(), y_mesh.ravel()]).reshape(x_mesh.shape)
         z_model = helper.copy()
-        print(model.get_params())
+
+        # if self.verbose:
+        print("----------------------------------------------------")
+        print("\n".join(["{}: {}".format(k, v) for k, v in model.get_params().items()]))
+        print("----------------------------------------------------")
 
         plt.scatter(X[:, 0], X[:, 1], c=y, s=50, cmap='autumn')
         # levels are the levels of the contour lines
@@ -372,10 +376,12 @@ if __name__ == '__main__':
         custom_model = SVM_custom(x_train, y_train, kernel='linear', C=Optimal_C, tolerance=tolerance, max_passes=max_passes, epsilon=epsilon, b=b, weight=w, alpha=alpha)
         custom_model.fit()
 
-        sklearn_model = SVC(kernel='linear', C=Optimal_C, tol=tolerance, max_iter=max_passes, verbose=True)
+        sklearn_model = SVC(kernel='linear', C=Optimal_C, tol=tolerance, max_iter=max_passes, verbose=False)
         sklearn_model.fit(x_train, y_train)
 
         fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(18, 8))
+
+        # Todo: decision boundry for custom model is not working
         custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=custom_model, axes=axs[0], plt_title="::Custom SVM::")
         custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=sklearn_model, axes=axs[1], plt_title="::SKLearn-SVM::")
         plt.show()
