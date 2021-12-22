@@ -1,9 +1,11 @@
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from sklearn.svm import SVC
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from utils import train_test_split, confusion_matrix, classification_report
+sns.set()
 
 class SVM_custom:
     def __init__(self, data, label, b, alpha, weight,  C=1, tolerance=1e-4, max_passes=100, polynomial_degree=2, sigma=1, epsilon=1e-5, kernel="linear"):
@@ -255,13 +257,11 @@ class SVM_custom:
         return self
 
     def __repr__(self) -> str:
-        represent = "SVM :: Kernel_type: {}\tC: {:.2f}\tTolerance: {:.2f}\tMax_passes: {}\tEpsilon: {:.2f}".format(self.kernel, self.C, self.tolerance, self.max_passes, self.epsilon)
-        if self.kernel == 'linear':
-            represent += "\tWeight: {}".format(self.weight)
-        elif self.kernel == 'polynomial':
-            represent += "\tDegree: {}\tWeight: {}".format(self.p_degree, self.weight)
+        represent = "::\n Kernel_type: {}\t|C: {:.2f}\t|Tolerance: {:.2f}\t|Max_passes: {}\t|Epsilon: {:.2f} \t| Weight".format(self.kernel, self.C, self.tolerance, self.max_passes, self.epsilon, self.b, *self.weight)
+        if self.kernel == 'polynomial':
+            represent += "\tDegree: {}:".format(self.p_degree)
         elif self.kernel == 'rbf' or self.kernel == 'gauassian':
-            represent += "\tSigma: {:.2f}\tWeight: {}".format(self.sigma, self.weight)
+            represent += "\tSigma: {:.2f}".format(self.sigma)
         return represent
 
     def plot_decision_boundry_2d(self, model, axes, plt_title, data, label):
@@ -298,7 +298,9 @@ class SVM_custom:
 
 if __name__ == '__main__':
 
-    part_one, part_two, part_three = False, True, False
+    part_one = True
+    part_two = False
+    part_three = False
 
     if part_one:
         dataset = pd.read_csv('d1.csv', header=None)
@@ -319,7 +321,7 @@ if __name__ == '__main__':
         b = 0
         w = np.zeros((1, x_train.shape[1]))
         alpha = np.zeros((x_train.shape[0]))
-        svm_linear = SVM_custom(data=x_train, label=y_train, kernel="linear", b=b, alpha=alpha, weight=w, C=1, tolerance=0.0001, max_passes=1000, epsilon=1e-5, sigma=1)
+        svm_linear = SVM_custom(data=x_train, label=y_train, kernel="linear", b=b, alpha=alpha, weight=w, C=5, tolerance=0.0001, max_passes=1000, epsilon=1e-5, sigma=1)
         alphas, bias, weight = svm_linear.fit()
         print("SVM _ Model: ", svm_linear)
         print("alphas: ", alphas)
@@ -328,7 +330,7 @@ if __name__ == '__main__':
         accuracy = svm_linear.accuracy(y_test, x_test)
         print("accuracy: ", accuracy)
 
-        model = SVC(kernel='linear', verbose=True)
+        model = SVC(kernel='linear', C=5, tol=0.0001)
         model = model.fit(x_train, y_train)
 
         # plot decision boundary
@@ -350,11 +352,12 @@ if __name__ == '__main__':
         b = 0
         w = np.zeros((1, x_train.shape[1]))
         alpha = np.zeros((x_train.shape[0]))
-        svm_gausssian = SVM_custom(data=x_train, label=y_train, kernel="gaussian", b=b, alpha=alpha, weight=w, C=1, tolerance=0.001, max_passes=100, epsilon=1e-5, sigma=20)
+        svm_gausssian = SVM_custom(data=x_train, label=y_train, kernel="gaussian", b=b, alpha=alpha, weight=w, C=1e-2, tolerance=0.001, max_passes=100, epsilon=1e-5, sigma=20)
         svm_gausssian.fit()
 
         model = SVC(kernel='rbf', gamma=10, verbose=True)
         model = model.fit(x_train, y_train)
+
         # plot decision boundary
         fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(12, 4))
         z=svm_gausssian.plot_decision_boundry_2d(svm_gausssian, axs[0], "SVM Custom", data=np.array(X), label=np.array(y))
@@ -363,7 +366,7 @@ if __name__ == '__main__':
         plt.show()
         print("SVM _ Model: ", svm_gausssian)
 
-        # save to txt file 
+        # save decision_function_result to txt file 
         with open('./z.txt', 'w') as f:
             for item in z:
                 f.write("%s\n" % item)
