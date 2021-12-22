@@ -280,7 +280,7 @@ class SVM_custom:
             represent += "\tWeight: {}".format(self.weight)
         elif self.kernel == 'polynomial':
             represent += "\tDegree: {}\tWeight: {}".format(self.p_degree, self.weight)
-        elif self.kernel == 'rbf':
+        elif self.kernel == 'rbf' or self.kernel == 'gauassian':
             represent += "\tSigma: {:.2f}\tWeight: {}".format(self.sigma, self.weight)
         return represent
 
