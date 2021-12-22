@@ -253,9 +253,12 @@ class SVM_custom:
         self.sequential_minimal_optimization()
         return self.alpha, self.b, self.weight
 
-    def f(self, data): # 
-        # return (-self.weight[0][0] * data - self.b + self.C) / self.weight[0][1]
-        return 
+    # def f(self, data): # 
+    #     # return (-self.weight[0][0] * data - self.b + self.C) / self.weight[0][1]
+    #     return 
+
+    def decision_function(self, data):
+        return np.inner(data, self.weight) + self.b
 
     def sign(self, data):
         fx = self.decision_function(data) 
@@ -264,11 +267,10 @@ class SVM_custom:
         self.y_predict = positive + negative
         return self.y_predict
 
-    def decision_function(self, data):
-        return np.inner(data, self.weight) + self.b
-
     def predict(self, data):
-        return np.sign(self.decision_function(data))
+        self.support_vectors_indices_ = self.get_support_vector_indices()
+        self.support_vectors_ = self.get_support_vector_()
+        return self.sign(data)
 
     def accuracy(self, y_true, x_test):
         return np.mean(y_true == self.sign(x_test))
@@ -280,11 +282,20 @@ class SVM_custom:
     # def functional_margin(self, data): 
     #     return self.label * (self.weight.T @ data + self.b).flatten()
 
-    def get_support_vectors_indices(self):
-        return np.where(self.alpha > 0)[0]
+    # def get_support_vectors_indices(self):
+    #     return np.where(self.alpha > 0)[0]
 
     def num_support_vectors(self):
         return np.sum(self.alpha > 0)
+
+    
+    def get_support_vector_indices(self):
+        self.support_vectors_indices_ = np.where(self.alpha > 0)[0]
+        return self.support_vectors_indices_
+
+    def get_support_vector_(self):
+        self.support_vectors_ = self.data[self.get_support_vector_indices()]
+        return self.support_vectors_
 
     def get_params(self):
         return {'kernel type': self.kernel, 'C': self.C, 'tolerance': self.tolerance, 'max_passes': self.max_passes, 'epsilon': self.epsilon, 'degree': self.p_degree, 'gamma': self.sigma, 'coeffs': [*self.weight.flatten()], 'bias': self.b}
@@ -302,14 +313,6 @@ class SVM_custom:
         elif self.kernel == 'rbf' or self.kernel == 'gauassian':
             represent += "\tsigma: {:.2f}".format(self.sigma)
         return represent
-
-    def get_support_vector_indices(self):
-        self.support_vectors_indices_ = np.where(self.alpha > 0)[0]
-        return self.support_vectors_indices_
-
-    def get_support_vector_(self):
-        self.support_vectors_ = self.data[self.get_support_vectors_indices()]
-        return self.support_vectors_
 
     def plot_decision_boundry_2d(self, model, plt_title, data, label, axes=None):
         if axes is None:
@@ -341,7 +344,6 @@ class SVM_custom:
         plt.contourf(x_mesh, y_mesh, np.sign(z_model.reshape(x_mesh.shape)), alpha=0.3, levels=2, cmap=ListedColormap(rgb), zorder=1)
         plt.contour(x_mesh, y_mesh, z_model, colors='k', levels=[-1, 0, 1], alpha=0.5, linestyles=['--', '-', '--'])
         plt.title(plt_title)
-
         return helper
 
     def decision_boundary(self, model, plt_title, data, label, ax=None):
@@ -353,13 +355,16 @@ class SVM_custom:
         X = data.copy()
         y = label.copy()
 
-        x_limit     = np.arange(start = X[:, 0].min() , stop =X[:, 0].max() , step =0.01)
-        y_limit     = np.arange(start = X[:, 1].min() , stop =X[:, 1].max() , step =0.01)
+        x_limit = np.arange(start = X[:, 0].min() , stop =X[:, 0].max() , step =0.01)
+        y_limit = np.arange(start = X[:, 1].min() , stop =X[:, 1].max() , step =0.01)
 
         x_mesh, y_mesh = np.meshgrid(x_limit, y_limit)
-        test = np.array([x_mesh.ravel(), y_mesh.ravel()]).T                 
-        pred = model.predict(test)
-        Z    = pred.reshape(x_mesh.shape)  
+        test = np.array([x_mesh.ravel(), y_mesh.ravel()]).T
+        Z = model.predict(test).reshape(x_mesh.shape).astype(np.int64)
+        # print(Z)
+        
+        # Z_scaled = model.support_vector_ - model.support_vector_.min(axis=0)
+        # Z_scaled = Z_scaled / Z_scaled.max(axis=0)
         
         plt.scatter(X[y == 1, 0], X[y == 1, 1], color=ListedColormap(('r', 'b'))(0), marker='o', label='1')
         plt.scatter(X[y == -1, 0], X[y == -1, 1], color=ListedColormap(('r', 'b'))(1), marker='x', label='-1')
@@ -367,11 +372,10 @@ class SVM_custom:
         plt.xlim(x_mesh.min(), x_mesh.max())
         plt.ylim(y_mesh.min(), y_mesh.max())
 
-        plt.title('SVM')
+        plt.title(plt_title)
         plt.xlabel('x_mesh')
         plt.ylabel('y_mesh')
         plt.legend(loc='best')
-
 
 if __name__ == '__main__':
 
