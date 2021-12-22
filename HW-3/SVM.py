@@ -165,26 +165,6 @@ class SVM_custom:
                     # "RuntimeWarning: invalid value encountered in true_divide" will be raised
                     # need to handle it
                     ############################################################
-                    # if (eta > 0):
-                    #     # we clip the lagrange_multiplier_j_new to make sure it is in the range [L,H]
-                    #     self.alpha[j] = np.clip(alpha_j + y_j * (E_i - E_j) / eta, L, H)
-
-                    # else:
-                    #     # XXX: eta == 0
-                    #     # lower bound and upper bound are 
-                    #     lower_bound = y_j * (E_i - E_j) * L
-                    #     upper_bound = y_j * (E_i - E_j) * H
-
-                    #     # print("low_bound = ", lower_bound, " upper_bound = ", upper_bound)
-
-                    #     # We use epsilon to make sure that the lagrange_multiplier_j_new is in the range [L,H], if not, we assign it to L or H
-                    #     if (upper_bound - lower_bound < self.epsilon):
-                    #         self.alpha[j] = L
-                    #     elif (lower_bound - upper_bound > self.epsilon):
-                    #         self.alpha[j] = H
-                    #     else:
-                    #         self.alpha[j] = L + (H - L) / 2
-                    #         continue
                     if eta >= 0:
                         print("eta>=0")
                         continue
