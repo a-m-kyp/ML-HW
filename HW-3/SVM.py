@@ -1,3 +1,4 @@
+from os import name
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -10,7 +11,7 @@ from utils import train_test_split, confusion_matrix, classification_report
 sns.set()
 
 class SVM_custom:
-    def __init__(self, data, label, b, alpha, weight,  C=1, tolerance=1e-4, max_passes=100, polynomial_degree=2, sigma=1, epsilon=1e-5, kernel="linear"):
+    def __init__(self, data, label, alpha, weight, b=0, C=1, tolerance=1e-4, max_passes=100, polynomial_degree=2, sigma=1, epsilon=1e-5, kernel="linear"):
         self.kernel = kernel                                # 'linear', 'guassian' # ToDo: 'polynomial', 'sigmoid', 'laplacian', 'Bessel', 'Anova'
         self.data = data                                    # x (MxN)
         self.label = label                                  # label (Mx1)
@@ -25,7 +26,7 @@ class SVM_custom:
         self.alpha = alpha                                  # alpha (Mx1)
         self.k = self.calculate_kernel(kernel)              # Kernel (MxM)
 
-    def change_dataset(self, data, label):
+    def set_dataset(self, data, label):
         self.data = data
         self.label = label
 
@@ -251,11 +252,11 @@ class SVM_custom:
     def geo_margin(self, data):
         return self.label * (self.weight / np.linalg.norm(self.weight)).T @ data + (self.b / np.linalg.norm(self.weight)).flatten()
 
-    def functional_margin(self, data):
+    def functional_margin(self, data): 
         return self.label * (self.weight.T @ data + self.b).flatten()
 
-    def f(self, data):
-        return (-self.weight[0][0] * data - self.b + self.C) / self.weight[0][1]
+    def f(self, data): # 
+        return (-self.weight[0] * data - self.b + self.C) / self.weight[1]
 
     def get_support_vectors_indices(self):
         return np.where(self.alpha > 0)[0]
@@ -272,8 +273,8 @@ class SVM_custom:
         return self
 
     def __repr__(self) -> str:
-        represent = "::\n Kernel_type: {}\t|C: {:.2f}\t|Tolerance: {:.2f}\t|Max_passes: {}\t|Epsilon: {:.2f} \t| Weight".format(
-            self.kernel, self.C, self.tolerance, self.max_passes, self.epsilon, self.b, *self.weight)
+        represent = "::\n Kernel_type: {}\nC: {:.2f}\nTolerance: {:.2f}\nMax_passes: {}\nEpsilon: {:.2f} \n Weight".format(
+            self.kernel, self.C, self.tolerance, self.max_passes, self.epsilon, self.b, self.weight)
         if self.kernel == 'polynomial':
             represent += "\tDegree: {}:".format(self.p_degree)
         elif self.kernel == 'rbf' or self.kernel == 'gauassian':
@@ -318,55 +319,66 @@ class SVM_custom:
     def accuracy(self, y_true, x_test):
         return np.mean(y_true == self.sign(x_test))
 
-
 if __name__ == '__main__':
 
-    part_one = False
-    part_two = False
-    part_three = True
+    part_one    = True
+    part_two    = False
+    part_three  = False
+    part_four   = False
+    part_five   = False
 
     if part_one:
-        dataset = pd.read_csv('d1.csv', header=None)
-        dataset.columns = ['x1', 'x2', 'y']
+        # Todo:
+        # Implement Custom_SVM class
+        # Consider kernel = linear, C = [0.01, 0.1, 1, 10, 100], tolerance = 0.001, max_passes = 5, epsilon = 0.001
+        # plot decision boundary for each C and get accuracy for each C
+        # report the best C and the corresponding accuracy
+        
+        dataset = pd.read_csv('d1.csv', header=None, names=['x1', 'x2', 'y'])
         X = dataset.iloc[:, :-1]
         y = dataset.iloc[:, -1]
+        y = y.replace(0, -1)
 
-        dataset['y'] = dataset['y'].replace(0, -1)
         x_train, x_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.3, shuffle=True)
+            X, y, test_size=0.2)
 
-        # reshape y_train and y_test to be 1D
         y_train = y_train.reshape(-1)
         y_test = y_test.reshape(-1)
 
-        print("test data size: ", x_test.shape, "y_test size: ", y_test.shape)
-        print("train data size: ", x_train, "y_train size: ", y_train)
-
+        C_list = [0.01, 0.1, 1, 10, 100]
+        tolerance = 0.001
+        max_passes = 5
+        epsilon = 0.001
         b = 0
         w = np.zeros((1, x_train.shape[1]))
         alpha = np.zeros((x_train.shape[0]))
-        svm_linear = SVM_custom(data=x_train, label=y_train, kernel="linear", b=b, alpha=alpha,
-                                weight=w, C=5, tolerance=0.0001, max_passes=1000, epsilon=1e-5, sigma=1)
-        alphas, bias, weight = svm_linear.fit()
-        print("SVM _ Model: ", svm_linear)
-        print("alphas: ", alphas)
-        print("bias: ", bias)
-        print("weight: ", weight[0])
-        accuracy = svm_linear.accuracy(y_test, x_test)
-        print("accuracy: ", accuracy)
 
-        model = SVC(kernel='linear', C=5, tol=0.0001)
-        model = model.fit(x_train, y_train)
+        model_result = []
+        for C in C_list:
+            model = SVM_custom(x_train, y_train, kernel='linear', C=C, tolerance=tolerance, max_passes=max_passes, epsilon=epsilon, b=b, weight=w, alpha=alpha)
+            model.fit()
+            accuracy = model.accuracy(y_test, x_test)
+            model_result.append([C, accuracy])
+        
+        model_result = pd.DataFrame(model_result, columns=['C', 'accuracy'])
+        print(model_result)
 
-        # plot decision boundary
-        fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(12, 4))
-        svm_linear.plot_decision_boundry_2d(
-            svm_linear, axs[0], "SVM Custom", data=np.array(X), label=np.array(y))
-        svm_linear.plot_decision_boundry_2d(
-            model, axs[1], "SVM Scikit-learn", data=np.array(X), label=np.array(y))
-        plt.show()
+
 
     if part_two:
+        # Todo:
+        # Implement gaussian kernel
+        # Verify the accuracy of implementation of gaussian kernel with below parameters
+        # x_1 = [1,2,1], x_2 = [0,4,-1], sigma = 2 => 324562.0
+
+        dataset = pd.read_csv('d2.csv', header=None)
+        X = dataset.iloc[:, :-1]
+        y = dataset.iloc[:, -1]
+        model = SVM_custom(X, y, kernel="gaussian", weight=np.zeros((1, X.shape[1])), alpha=np.zeros((X.shape[0])))
+        kernel_result = model.gaussian_kernel(np.array([1, 2, 1]), np.array([0, 4, -1]), sigma=2) # 0.32465246735834974
+        print("gaussian kernel result: ", kernel_result)
+
+    if part_three:
         dataset = pd.read_csv('d2.csv', header=None, names=['x1', 'x2', 'y'])
         X = dataset.iloc[:, :-1]
         y = dataset.iloc[:, -1]
@@ -381,7 +393,7 @@ if __name__ == '__main__':
         w = np.zeros((1, x_train.shape[1]))
         alpha = np.zeros((x_train.shape[0]))
         svm_gausssian = SVM_custom(data=x_train, label=y_train, kernel="gaussian", b=b, alpha=alpha,
-                                   weight=w, C=1e-2, tolerance=0.001, max_passes=100, epsilon=1e-5, sigma=20)
+                                   weight=w, C=1, tolerance=0.001, max_passes=5, epsilon=1e-5, sigma=0.1)
         svm_gausssian.fit()
 
         model = SVC(kernel='rbf', gamma=10, verbose=True)
@@ -405,7 +417,7 @@ if __name__ == '__main__':
             for item in z1:
                 f.write("%s\n" % item)
 
-    if part_three:
+    if part_four:
         # Todo:
         # Use SVM with gaussian kernel on d3.csv
         # C and sigma range is [30, 10, 3, 1, 0.3, 0.1, 0.03, 0.01, 0.003, 0.001]
@@ -448,5 +460,5 @@ if __name__ == '__main__':
         model_result = model_result[model_result[:, 2].argsort()]
         print(model_result[-1])
 
-        
-
+    if part_five:
+        pass
