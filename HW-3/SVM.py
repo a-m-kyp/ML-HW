@@ -275,61 +275,14 @@ class SVM_custom:
         return self
 
     def __repr__(self) -> str:
+        represent = "SVM :: Kernel_type: {}\tC: {:.2f}\tTolerance: {:.2f}\tMax_passes: {}\tEpsilon: {:.2f}".format(self.kernel, self.C, self.tolerance, self.max_passes, self.epsilon)
         if self.kernel == 'linear':
-            return 'SVM(kernel=linear, C=%f, tolerance=%f, max_passes=%d, epsilon=%f)' % (self.C, self.tolerance, self.max_passes, self.epsilon)
+            represent += "\tWeight: {}".format(self.weight)
         elif self.kernel == 'polynomial':
-            return 'SVM(kernel=polynomial, C=%f, tolerance=%f, max_passes=%d, epsilon=%f, degree=%d)' % (self.C, self.tolerance, self.max_passes, self.epsilon, self.degree)
+            represent += "\tDegree: {}\tWeight: {}".format(self.p_degree, self.weight)
         elif self.kernel == 'rbf':
-            return 'SVM(kernel=rbf, C=%f, tolerance=%f, max_passes=%d, epsilon=%f, sigma=%f)' % (self.C, self.tolerance, self.max_passes, self.epsilon, self.sigma)
-        elif self.kernel == 'gaussian':
-            return 'SVM(kernel=gaussian, C=%f, tolerance=%f, max_passes=%d, epsilon=%f, sigma=%f)' % (self.C, self.tolerance, self.max_passes, self.epsilon, self.sigma)
-
-    # def plot_decision_boundary(self, x_test, y_test):
-    #     x_min, x_max = x_test[:, 0].min() - 1, x_test[:, 0].max() + 1 # x_min and x_max are the minimum and maximum values of the x-axis
-    #     y_min, y_max = x_test[:, 1].min() - 1, x_test[:, 1].max() + 1 # y_min and y_max are the minimum and maximum values of the y-axis
-    #     xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1)) # create a grid over the domain of the data
-    #     Z = self.predict(np.c_[xx.ravel(), yy.ravel()]) # get the predicted class for each example in the grid
-    #     Z = Z.reshape(xx.shape)
-    #     plt.contourf(xx, yy, Z, cmap=plt.cm.Paired, alpha=0.8)
-    #     plt.scatter(x_test[:, 0], x_test[:, 1], c=y_test, cmap=plt.cm.Paired)
-    #     plt.xlabel('X')
-    #     plt.ylabel('Y')
-    #     plt.xlim(xx.min(), xx.max())
-    #     plt.ylim(yy.min(), yy.max())
-    #     plt.show()
-
-    # def plot_decision_boundry(self, x_data, label_data):
-    #     x_min, x_max = x_data[:, 0].min() - 1, x_data[:, 0].max() + 1
-    #     y_min, y_max = x_data[:, 1].min() - 1, x_data[:, 1].max() + 1
-    #     xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.1),
-    #                         np.arange(y_min, y_max, 0.1))
-    #     grid_points = np.c_[xx.ravel(), yy.ravel()]
-    #     grid_labels = self.predict(grid_points)
-    #     grid_labels = grid_labels.reshape(xx.shape)
-    #     plt.contourf(xx, yy, grid_labels, cmap=plt.cm.Paired, alpha=0.8)
-    #     plt.scatter(x_data[:, 0], x_data[:, 1],
-    #                 c=label_data, cmap=plt.cm.Paired)
-    #     plt.xlabel('X1')
-    #     plt.ylabel('X2')
-    #     plt.show()
-
-    # def plot_decision_boundry_2d(self, y_pred, axes):
-    #     plt.axes(axes)
-    #     x_limit = [np.min(self.data[:, 0]), np.max(self.data[:, 0])] # x_limit is the minimum and maximum values of the x-axis
-    #     y_limit = [np.min(self.data[:, 1]), np.max(self.data[:, 1])] # y_limit is the minimum and maximum values of the y-axis
-    #     x_mesh, y_mesh = np.meshgrid(np.linspace(x_limit[0], x_limit[1], 100),
-    #                                  np.linspace(y_limit[0], y_limit[1], 100))
-    #     # color for points
-    #     color = np.array([[200, 0, 0], [0, 0, 100]]) / 255
-    #     z_model = self.predict(np.c_[x_mesh.ravel(), y_mesh.ravel()]).reshape(x_mesh.shape)
-    #     plt.scatter(self.data[:, 0], self.data[:, 1], c=self.label, cmap='summer')
-    #     plt.contour(x_mesh, y_mesh, z_model, colors=color, levels=[-1, 0, 1], alpha=0.5, linestyle=['--', '-', '--'])
-    #     plt.contourf(x_mesh, y_mesh, np.sign(z_model.reshape(x_mesh.shape)), alpha=0.2, cmap=ListedColormap(['#FF0000', '#0000FF']), zorder=1)
-    #     plt.xlim(x_limit)
-    #     plt.ylim(y_limit)
-    #     plt.xlabel('X_1')
-    #     plt.ylabel('X_2')
-    #     plt.show()
+            represent += "\tSigma: {:.2f}\tWeight: {}".format(self.sigma, self.weight)
+        return represent
 
     def plot_decision_boundry_2d(self, model, axes, plt_title, data, label):
         plt.axes(axes)
