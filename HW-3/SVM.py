@@ -1,9 +1,8 @@
 import numpy as np
 import pandas as pd
+from sklearn.svm import SVC
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
-import plotly.express as px
-from sklearn.svm import SVC
 from utils import train_test_split, confusion_matrix, classification_report
 
 class SVM_custom:
