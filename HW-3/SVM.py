@@ -248,8 +248,10 @@ class SVM_custom:
     def predict(self, data):
         return np.sign(self.decision_function(data))
 
+
+
     def get_params(self):
-        return {'kernel type': self.kernel, 'C': self.C, 'tolerance': self.tolerance, 'max_passes': self.max_passes, 'epsilon': self.epsilon}
+        return {'kernel type': self.kernel, 'C': self.C, 'tolerance': self.tolerance, 'max_passes': self.max_passes, 'epsilon': self.epsilon, 'degree': self.p_degree, 'gamma': self.sigma, 'coeffs': self.weight, 'b': self.b}
 
     def set_params(self, **parameters):
         for parameter, value in parameters.items():
