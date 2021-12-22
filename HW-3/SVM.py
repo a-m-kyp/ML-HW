@@ -363,6 +363,17 @@ if __name__ == '__main__':
         model_result = pd.DataFrame(model_result, columns=['C', 'accuracy'])
         print(model_result)
 
+        Optimal_C = model_result.loc[model_result['accuracy'].idxmax()]['C']
+        model = SVM_custom(x_train, y_train, kernel='linear', C=Optimal_C, tolerance=tolerance, max_passes=max_passes, epsilon=epsilon, b=b, weight=w, alpha=alpha)
+        model.fit()
+
+        sklearn_model = SVC(kernel='linear', C=Optimal_C, tol=tolerance, max_iter=max_passes, epsilon=epsilon)
+
+        fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(12, 4))
+        model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=model, axs=axs[0], plt_title="::Custom SVM::")
+        model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=sklearn_model, axs=axs[1], plt_title="::SKLearn-SVM::")
+        plt.show()
+
 
 
     if part_two:
@@ -383,9 +394,7 @@ if __name__ == '__main__':
         X = dataset.iloc[:, :-1]
         y = dataset.iloc[:, -1]
         dataset['y'] = dataset['y'].replace(0, -1)
-        x_train, x_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.3, shuffle=True)
-
+        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.3, shuffle=True)
         y_train = y_train.reshape(-1)
         y_test = y_test.reshape(-1)
 
