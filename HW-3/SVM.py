@@ -8,7 +8,7 @@ from utils import train_test_split, confusion_matrix, classification_report
 
 class SVM_custom:
     def __init__(self, data, label, b, alpha, weight,  C=1, tolerance=1e-4, max_passes=100, polynomial_degree=2, sigma=1, epsilon=1e-5, kernel="linear"):
-        self.kernel = kernel            # 'linear', 'polynomial', 'guassian' # ToDo: 'sigmoid', 'laplacian', 'Bessel', 'Anova'
+        self.kernel = kernel                                # 'linear', 'guassian' # ToDo: 'polynomial', 'sigmoid', 'laplacian', 'Bessel', 'Anova'
         self.data = data                                    # x (MxN)
         self.label = label                                  # label (Mx1)
         self.weight = weight                                # weights (1xN)
@@ -32,8 +32,21 @@ class SVM_custom:
     def poly_kernel(self, Xi, Xj, p_degree):
         return (np.dot(Xi, Xj.T) + 1) ** p_degree
 
-    def gaussian_kernel(self, Xi, Xj, sigma, axis=None):
-        return np.exp((-(np.linalg.norm(Xi-Xj, axis=axis)**2))/(2*sigma**2))
+    def gaussian_kernel(self, x, z, sigma, axis=None):
+        return np.exp((-(np.linalg.norm(x-z, axis=axis)**2))/(2*sigma**2))
+    
+    def gaussian_matrix(self, X, sigma):
+        row, col = X.shape
+        gauss_matrix = np.zeros(shape=(row, row))
+        X = np.asarray(X)
+        i = 0
+        for v_i in X:
+            j = 0
+            for v_j in X:
+                gauss_matrix[i, j] = self.gaussian_kernel(v_i.T, v_j.T, sigma)
+                j += 1
+            i += 1
+        return gauss_matrix
 
     def calculate_kernel(self, kernel):
         if kernel == "linear":
@@ -42,10 +55,10 @@ class SVM_custom:
             # return self.poly_kernel(self.data[None,:, :], self.data[:,None, :], self.p_degree)
             return self.poly_kernel(self.data, self.data, self.p_degree)
         elif kernel == "gaussian":
-            # return self.gaussian_kernel(self.data, self.data, self.sigma)
-            return self.gaussian_kernel(self.data[None, :, :], self.data[:, None, :], self.sigma, axis=2)           
+            return self.gaussian_matrix(self.data, self.sigma)
         else:
             raise ValueError("Kernel type not supported")
+
 
     def hypothesis(self, i):
         # print('k[%d] = %s' % (i, self.k[i]))
