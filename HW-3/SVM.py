@@ -11,7 +11,7 @@ from utils import train_test_split, confusion_matrix, classification_report
 sns.set()
 
 class SVM_custom:
-    def __init__(self, data, label, alpha, weight, b=0, C=1, tolerance=1e-4, max_passes=100, polynomial_degree=2, sigma=1, epsilon=1e-5, kernel="linear"):
+    def __init__(self, data, label, alpha, weight, b=0, C=1, tolerance=1e-4, max_passes=100, polynomial_degree=2, sigma=1, epsilon=1e-5, kernel="linear", verbose=False):
         self.kernel = kernel                                # 'linear', 'guassian' # ToDo: 'polynomial', 'sigmoid', 'laplacian', 'Bessel', 'Anova'
         self.data = data                                    # x (MxN)
         self.label = label                                  # label (Mx1)
@@ -25,6 +25,7 @@ class SVM_custom:
         self.max_passes = max_passes                        # maximum number of passes over the training data
         self.alpha = alpha                                  # alpha (Mx1)
         self.k = self.calculate_kernel(kernel)              # Kernel (MxM)
+        self.verbose = verbose                              # verbose
 
     def set_dataset(self, data, label):
         self.data = data
@@ -179,7 +180,8 @@ class SVM_custom:
                         self.alpha[j] = L
 
                     if (np.abs(self.alpha[j] - alpha_j_old) < self.epsilon):
-                        print("alpha_j not moving enough")
+                        if self.verbose:
+                            print("alpha_j not moving enough")
                         continue
 
                     ############################################################
@@ -203,13 +205,16 @@ class SVM_custom:
 
                     if (0 < self.alpha[i]) and (self.alpha[i] < self.C):
                         self.b = b_one
-                        print("b = i ", self.b)
+                        if self.verbose:
+                            print("b = i ", self.b)
                     elif (0 < self.alpha[j]) and (self.alpha[j] < self.C):
                         self.b = b_two
-                        print("b = j ", self.b)
+                        if self.verbose:
+                            print("b = j ", self.b)
                     else:
                         self.b = (b_one + b_two) / 2
-                        print("b = else ", self.b)
+                        if self.verbose:
+                            print("b = else ", self.b)
 
                     y_i = self.label[i]
                     y_j = self.label[j]
@@ -223,8 +228,8 @@ class SVM_custom:
                         (alpha_j - alpha_j_old) * self.data[j]
 
                     num_changed_alphas += 1  # num_changed_alphas is the number of alphas that changed
-                    print("pass = %d i: %d, %d pairs changed" %
-                          (passes, i, num_changed_alphas))
+                    if self.verbose:
+                        print("pass = %d i: %d, %d pairs changed" %(passes, i, num_changed_alphas))
             ############################################################
             # If no alpha_i, alpha_j have been updated then terminate
             ############################################################
@@ -232,16 +237,28 @@ class SVM_custom:
                 passes += 1  # increment passes
             else:
                 passes = 0  # reset passes to 0
-            print("SVM training iteration = %d finished" % passes)
+            if self.verbose:
+                print("SVM training iteration = %d finished" % passes)
         # alphas are the coefficients of the support vectors
         # b is the threshold of the SVM
         # return self.lagrange_multiplier, self.b, self.weight
         else:
-            print("Training Finished")
+            if self.verbose:
+                print("Training Finished")
 
     def fit(self):
         self.sequential_minimal_optimization()
         return self.alpha, self.b, self.weight
+    
+    def sign(self, data):
+        w_T_x_plus_b = np.inner(data, self.weight) + self.b
+        positive = (1) * (w_T_x_plus_b >= 0)
+        negative = (-1) * (w_T_x_plus_b < 0)
+        self.y_predict = positive + negative
+        return self.y_predict
+
+    def accuracy(self, y_true, x_test):
+        return np.mean(y_true == self.sign(x_test))
 
     def decision_function(self, data):
         return np.inner(data, self.weight) + self.b
@@ -302,22 +319,10 @@ class SVM_custom:
 
         plt.scatter(X[:, 0], X[:, 1], c=y, s=50, cmap='autumn')
         # levels are the levels of the contour lines
-        plt.contour(x_mesh, y_mesh, z_model, colors='k',
-                    levels=[-1, 0, 1], alpha=0.5, linestyles=['--', '-', '--'])
-        plt.contourf(x_mesh, y_mesh, np.sign(z_model.reshape(x_mesh.shape)),
-                     alpha=0.3, levels=2, cmap=ListedColormap(rgb), zorder=1)
+        plt.contour(x_mesh, y_mesh, z_model, colors='k', levels=[-1, 0, 1], alpha=0.5, linestyles=['--', '-', '--'])
+        plt.contourf(x_mesh, y_mesh, np.sign(z_model.reshape(x_mesh.shape)), alpha=0.3, levels=2, cmap=ListedColormap(rgb), zorder=1)
         plt.title(plt_title)
         return helper
-
-    def sign(self, data):
-        w_T_x_plus_b = np.inner(data, self.weight) + self.b
-        positive = (1) * (w_T_x_plus_b >= 0)
-        negative = (-1) * (w_T_x_plus_b < 0)
-        self.y_predict = positive + negative
-        return self.y_predict
-
-    def accuracy(self, y_true, x_test):
-        return np.mean(y_true == self.sign(x_test))
 
 if __name__ == '__main__':
 
