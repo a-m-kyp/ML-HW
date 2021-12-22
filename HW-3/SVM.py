@@ -332,7 +332,6 @@ class SVM_custom:
         helper = model.decision_function(
             np.c_[x_mesh.ravel(), y_mesh.ravel()]).reshape(x_mesh.shape)
 
-        # helper = model.predict(np.c_[x_mesh.ravel(), y_mesh.ravel()]).reshape(x_mesh.shape)
         z_model = helper.copy()
 
         # if self.verbose:
@@ -345,30 +344,6 @@ class SVM_custom:
         plt.contourf(x_mesh, y_mesh, np.sign(z_model.reshape(x_mesh.shape)), alpha=0.3, levels=2, cmap=ListedColormap(rgb), zorder=1)
         plt.contour(x_mesh, y_mesh, z_model, colors='k', levels=[-1, 0, 1], alpha=0.5, linestyles=['--', '-', '--'])
         plt.title(plt_title)
-
-        # plt.figure(figsize=(10, 10))
-        # sns.scatterplot(X[:, 0], X[:, 1], hue=y, s=50, cmap='autumn')
-        # w = model.weight.tolist()[0]
-        # b = model.b
-        # x_points = np.linspace(-1, 1)
-        # y_points = - (w[0] / w[1]) * x_points - (b / w[1])
-
-        # plt.plot(x_points, y_points, 'k-', linewidth=2)
-
-        # # Encircle the support vectors
-        # for i in model.get_support_vectors_indices():
-        #     plt.scatter(X[i, 0], X[i, 1], s=50, facecolors='none', edgecolors='k')
-
-        # w_hat = w / np.linalg.norm(w)
-        # margin = 1 / np.linalg.norm(w)
-
-        # decision_boundary_points = np.array(list(zip(x_points, y_points)))
-        # points_of_line_above = decision_boundary_points[np.where(decision_boundary_points[:, 1] > 0)]
-        # points_of_line_below = decision_boundary_points[np.where(decision_boundary_points[:, 1] < 0)]
-
-        # plt.plot(points_of_line_above[:, 0], points_of_line_above[:, 1], 'k-', linewidth=2)
-        # plt.plot(points_of_line_below[:, 0], points_of_line_below[:, 1], 'k-', linewidth=2)
-        # plt.show()
 
         return helper
 
