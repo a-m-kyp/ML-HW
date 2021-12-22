@@ -258,21 +258,11 @@ class SVM_custom:
         return 
 
     def sign(self, data):
-        w_T_x_plus_b = np.inner(data, self.weight) + self.b
-        positive = (1) * (w_T_x_plus_b >= 0)
-        negative = (-1) * (w_T_x_plus_b < 0)
-        self.y_predict = positive + negative
-        return self.y_predict
-
-    def accuracy(self, y_true, x_test):
-        return np.mean(y_true == self.sign(x_test))
-
-    def test(self, x_test, y_test):
-        fx = self.f(x_test)
+        fx = self.decision_function(data) 
         positive = (1) * (fx >= 0)
         negative = (-1) * (fx < 0)
-        pred =  positive + negative
-        return np.mean(y_test == pred)
+        self.y_predict = positive + negative
+        return self.y_predict
 
     def decision_function(self, data):
         return np.inner(data, self.weight) + self.b
@@ -280,18 +270,21 @@ class SVM_custom:
     def predict(self, data):
         return np.sign(self.decision_function(data))
 
-    def geo_margin(self, data):
-        return self.label * (self.weight / np.linalg.norm(self.weight)).T @ data + (self.b / np.linalg.norm(self.weight)).flatten()
+    def accuracy(self, y_true, x_test):
+        return np.mean(y_true == self.sign(x_test))
 
-    def functional_margin(self, data): 
-        return self.label * (self.weight.T @ data + self.b).flatten()
+
+    # def geo_margin(self, data):
+    #     return self.label * (self.weight / np.linalg.norm(self.weight)).T @ data + (self.b / np.linalg.norm(self.weight)).flatten()
+
+    # def functional_margin(self, data): 
+    #     return self.label * (self.weight.T @ data + self.b).flatten()
 
     def get_support_vectors_indices(self):
         return np.where(self.alpha > 0)[0]
 
     def num_support_vectors(self):
         return np.sum(self.alpha > 0)
-
 
     def get_params(self):
         return {'kernel type': self.kernel, 'C': self.C, 'tolerance': self.tolerance, 'max_passes': self.max_passes, 'epsilon': self.epsilon, 'degree': self.p_degree, 'gamma': self.sigma, 'coeffs': [*self.weight.flatten()], 'bias': self.b}
@@ -360,26 +353,24 @@ class SVM_custom:
         X = data.copy()
         y = label.copy()
 
+        x_limit     = np.arange(start = X[:, 0].min() , stop =X[:, 0].max() , step =0.01)
+        y_limit     = np.arange(start = X[:, 1].min() , stop =X[:, 1].max() , step =0.01)
+
+        x_mesh, y_mesh = np.meshgrid(x_limit, y_limit)
+        test = np.array([x_mesh.ravel(), y_mesh.ravel()]).T                 
+        pred = model.predict(test)
+        Z    = pred.reshape(x_mesh.shape)  
         
+        plt.scatter(X[y == 1, 0], X[y == 1, 1], color=ListedColormap(('r', 'b'))(0), marker='o', label='1')
+        plt.scatter(X[y == -1, 0], X[y == -1, 1], color=ListedColormap(('r', 'b'))(1), marker='x', label='-1')
+        plt.contourf(x_mesh, y_mesh, Z, alpha=0.3, levels=2, cmap=ListedColormap(('r', 'b')), zorder=1)
+        plt.xlim(x_mesh.min(), x_mesh.max())
+        plt.ylim(y_mesh.min(), y_mesh.max())
 
-        xlim = [np.min(X[:, 0]), np.max(X[:, 0])]
-        ylim = [np.min(X[:, 1]), np.max(X[:, 1])]
-
-        x = np.linspace(xlim[0], xlim[1], 100)
-        y = np.linspace(ylim[0], ylim[1], 100)
-        Y, X = np.meshgrid(y, x)
-        xy = np.vstack([X.ravel(), Y.ravel()]).T
-        P = model.decision_function(xy).reshape(X.shape)
-
-        ax.contour(X, Y, P, colors='k', levels=[-1, 0, 1], alpha=0.5,
-               linestyles=['--', '-', '--'])
-        
-        # ax.scatter(model.support_vectors_[:, 0], model.support_vectors_[:, 1], s=100, c='k', marker='o', label='Support Vectors')
-
-        ax.set_xlim(xlim)
-        ax.set_ylim(ylim)
-        ax.set_title(plt_title)
-
+        plt.title('SVM')
+        plt.xlabel('x_mesh')
+        plt.ylabel('y_mesh')
+        plt.legend(loc='best')
 
 
 if __name__ == '__main__':
