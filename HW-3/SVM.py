@@ -368,12 +368,12 @@ if __name__ == '__main__':
         model.fit()
 
         sklearn_model = SVC(kernel='linear', C=Optimal_C, tol=tolerance, max_iter=max_passes, epsilon=epsilon)
+        sklearn_model.fit(x_train, y_train)
 
         fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(12, 4))
         model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=model, axs=axs[0], plt_title="::Custom SVM::")
         model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=sklearn_model, axs=axs[1], plt_title="::SKLearn-SVM::")
         plt.show()
-
 
 
     if part_two:
