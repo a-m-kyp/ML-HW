@@ -383,9 +383,9 @@ if __name__ == '__main__':
 
     part_one    = False
     part_two    = False
-    part_three  = True
+    part_three  = False
     part_four   = False
-    part_five   = False
+    part_five   = True
 
     if part_one:
         # Todo:
