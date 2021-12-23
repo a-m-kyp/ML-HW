@@ -385,9 +385,12 @@ if __name__ == '__main__':
     part_two    = False
     part_three  = False
 
-    # check part_four and part_five True to get optimal result for part five
+    # check part_four and part_five True to get optimal result generated in part_four for part five
     part_four   = False
     part_five   = True
+
+    # Todo: decision_boundary result is not correct and need to be fixed
+    # accuracy is at half of the optimal result and need to be fixed
 
     if part_one:
         # Todo:
