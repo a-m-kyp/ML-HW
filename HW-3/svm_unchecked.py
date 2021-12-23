@@ -7,14 +7,14 @@ from matplotlib.colors import ListedColormap
 
 class SMO:
     def __init__(self, data, label, w, b=0, C=1, tolerance=1e-4, max_iter=100, polynomial_degree=2, sigma=1, epsilon=1e-4, kernel="linear"):
-        self.kernel = kernel    # 'linear' or 'gaussian'
-        self.data = data        # x (MxN)
-        self.label = label      # y (Mx1)
-        self.w = w		        # weight (1xN)
-        self.b = b		        # bias
-        self.C = C		        # upper bound parameter
-        self.sigma = sigma      # gaussian kernel parameter
-        self.epsilon = epsilon  # epsilon used in the stopping criteria
+        self.kernel = kernel        # 'linear' or 'gaussian'
+        self.data = data            # x (MxN)
+        self.label = label          # y (Mx1)
+        self.w = w		            # weight (1xN)
+        self.b = b		            # bias
+        self.C = C		            # upper bound parameter
+        self.sigma = sigma          # gaussian kernel parameter
+        self.epsilon = epsilon      # epsilon used in the stopping criteria
         self.tolerance = tolerance  # tolerance 
         self.p_degree = polynomial_degree  # polynomial kernel parameter
         self.max_iter = max_iter  # maximum iteration
@@ -41,7 +41,6 @@ class SMO:
 
     def poly_kernel(self, Xi, Xj, degree):
         return (Xi.dot(Xj.T) + 1)**degree
-
 
     def H_x(self, i):
         return (self.lagrange_multiplier * self.label.T).dot(self.k[i, :]) + self.b
@@ -100,8 +99,7 @@ class SMO:
 
         if (eta > 0):  # if eta = 0 then "RuntimeWarning: invalid value encountered in true_divide" will be raised
             # we clip the lagrange_multiplier_j_new to make sure it is in the range [L,H]
-            lagrange_multiplier_j_new = np.clip(
-                lagrange_multiplier_j + y2 * (E1 - E2) / eta, L, H)
+            lagrange_multiplier_j_new = np.clip(lagrange_multiplier_j + y2 * (E1 - E2) / eta, L, H)
         else:  # eta <= 0
             # y2 * (E1 - E2) * L
             lower_bound = y2 * (E1 - E2) * L
@@ -123,8 +121,7 @@ class SMO:
         if (abs(lagrange_multiplier_j - lagrange_multiplier_j_new) < eps):
             return False
 
-        lagrange_multiplier_i_new = lagrange_multiplier_i + s * \
-            (lagrange_multiplier_j - lagrange_multiplier_j_new)
+        lagrange_multiplier_i_new = lagrange_multiplier_i + s * (lagrange_multiplier_j - lagrange_multiplier_j_new)
 
         ########################################################################
         # Update b
@@ -249,6 +246,7 @@ if __name__ == '__main__':
 
     print("x_train : ", x_train.shape, "y_train : ", y_train.shape,
           "x_test : ", x_test.shape, "y_test : ", y_test.shape)
+    print("x_train : ", x_train[:10], "y_train : ", y_train[:10])
 
     # x_train, y_train = shuffle_union(x_train, y_train)
     # x_test, y_test = shuffle_union(x_test, y_test)
@@ -287,35 +285,35 @@ if __name__ == '__main__':
         epoch += 1
         numChanged = 0  # number of changed support vectors
 
-        # if (toCheckAll):  # toCheckAll is a flag to check all training samples and not only the support vectors
-        for j in range(len(x_train)):
-            # examine the jth training sample
-            numChanged += svm_model.examine(j, svm_model.tolerance)
-            print("epoch = ", epoch, "numChanged = ", numChanged)
-            # print("[epoch %s] numChanged: %s" % (epoch, numChanged))
+        if (toCheckAll):  # toCheckAll is a flag to check all training samples and not only the support vectors
+            for j in range(len(x_train)):
+                # examine the jth training sample
+                numChanged += svm_model.examine(j, svm_model.tolerance)
+                # print("epoch = ", epoch, "numChanged = ", numChanged)
+                # print("[epoch %s] numChanged: %s" % (epoch, numChanged))
 
-        # else:  # then toCheckAll is False and we check only the support vectors
+        else:  # then toCheckAll is False and we check only the support vectors
 
-        #     # out_of_bound is a vector of boolean values indicating whether the corresponding lagrange_multiplierbda is out of [0, C] because the corresponding support vector is not in the margin
-        #     out_of_bound = (svm_model.lagrange_multiplier > 0) + \
-        #         (svm_model.lagrange_multiplier < svm_model.C)
+            # out_of_bound is a vector of boolean values indicating whether the corresponding lagrange_multiplierbda is out of [0, C] because the corresponding support vector is not in the margin
+            out_of_bound = (svm_model.lagrange_multiplier > 0) + \
+                (svm_model.lagrange_multiplier < svm_model.C)
 
-        #     print(" > 0 ", svm_model.lagrange_multiplier[svm_model.lagrange_multiplier > 0],
-        #             " < C ", svm_model.lagrange_multiplier[svm_model.lagrange_multiplier < svm_model.C].shape)
-        #     print("\ntrainner.lagrange_multiplier = ", svm_model.lagrange_multiplier, "\nsvm_model.w = ",
-        #             svm_model.w, "\nsvm_model.b = ", svm_model.b)
-        #     print("Out of bound = ", out_of_bound)
+            # print(" > 0 ", svm_model.lagrange_multiplier[svm_model.lagrange_multiplier > 0],
+                    # " < C ", svm_model.lagrange_multiplier[svm_model.lagrange_multiplier < svm_model.C].shape)
+            # print("\ntrainner.lagrange_multiplier = ", svm_model.lagrange_multiplier, "\nsvm_model.w = ",
+            #         svm_model.w, "\nsvm_model.b = ", svm_model.b)
+            # print("Out of bound = ", out_of_bound)
 
-        #     # we apply [out_of_bound] to get the indices of the out of bound support vectors
-        #     out_index = np.arange(len(svm_model.lagrange_multiplier))[
-        #         out_of_bound]
+            # we apply [out_of_bound] to get the indices of the out of bound support vectors
+            out_index = np.arange(len(svm_model.lagrange_multiplier))[
+                out_of_bound]
 
-        #     print("out_index = ", out_index)
+            # print("out_index = ", out_index)
 
-        #     for j in out_index:  # j is the index of out_of_bound weight
-        #         # examine the jth training sample
-        #         numChanged += svm_model.examine(j, svm_model.tolerance)
-        #         # print("[epoch %s] numChanged: %s" % (epoch, numChanged))
+            for j in out_index:  # j is the index of out_of_bound weight
+                # examine the jth training sample
+                numChanged += svm_model.examine(j, svm_model.tolerance)
+                # print("[epoch %s] numChanged: %s" % (epoch, numChanged))
         w = svm_model.w
         b = svm_model.b
         # lagrange_multiplier = svm_model.lagrange_multiplier
