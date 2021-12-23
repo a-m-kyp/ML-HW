@@ -185,6 +185,8 @@ class SVM_custom:
                     if (np.abs(self.alpha[j] - alpha_j_old) < self.epsilon):
                         if self.verbose:
                             print("alpha_j not moving enough")
+                        self.weight = self.weight + self.label[i] * (self.alpha[i] - alpha_i_old) * self.data[i] + \
+                                    self.label[j] * (self.alpha[j] - alpha_j_old) * self.data[j]
                         continue
 
                     ############################################################
@@ -253,41 +255,35 @@ class SVM_custom:
         self.sequential_minimal_optimization()
         return self.alpha, self.b, self.weight
 
-    # def f(self, data): # 
-    #     # return (-self.weight[0][0] * data - self.b + self.C) / self.weight[0][1]
-    #     return 
+
 
     def decision_function(self, data):
+        # w_0, w_1 = self.weight[0]
+        # b = self.b
+        # y_predict = np.zeros((data.shape[0]))
+        # for i in range(data.shape[0]):
+        #     y_predict[i] = w_0 * data[i, 0] + w_1 * data[i, 1] + b
+        # return y_predict
         return np.inner(data, self.weight) + self.b
 
     def sign(self, data):
-        fx = self.decision_function(data) 
-        positive = (1) * (fx >= 0)
-        negative = (-1) * (fx < 0)
-        self.y_predict = positive + negative
-        return self.y_predict
+        fx = self.decision_function(data)
+        positivie_class = (1) * (fx >= 0)
+        negative_class = (-1) * (fx < 0)
+        return positivie_class + negative_class
+
 
     def predict(self, data):
         self.support_vectors_indices_ = self.get_support_vector_indices()
         self.support_vectors_ = self.get_support_vector_()
-        return self.sign(data)
+        self.y_predict = self.sign(data)
+        return self.y_predict
 
     def accuracy(self, y_true, x_test):
         return np.mean(y_true == self.sign(x_test))
 
-
-    # def geo_margin(self, data):
-    #     return self.label * (self.weight / np.linalg.norm(self.weight)).T @ data + (self.b / np.linalg.norm(self.weight)).flatten()
-
-    # def functional_margin(self, data): 
-    #     return self.label * (self.weight.T @ data + self.b).flatten()
-
-    # def get_support_vectors_indices(self):
-    #     return np.where(self.alpha > 0)[0]
-
     def num_support_vectors(self):
         return np.sum(self.alpha > 0)
-
     
     def get_support_vector_indices(self):
         self.support_vectors_indices_ = np.where(self.alpha > 0)[0]
@@ -346,42 +342,48 @@ class SVM_custom:
         plt.title(plt_title)
         return helper
 
-    def decision_boundary(self, model, plt_title, data, label, ax=None):
-        if ax is None:
-            ax = plt.gca()
-        else:
-            ax = plt.axes(ax)
+    # def decision_boundary(self, model, plt_title, data, label, ax=None):
+    #     if ax is None:
+    #         ax = plt.gca()
+    #     else:
+    #         ax = plt.axes(ax)
 
-        X = data.copy()
-        y = label.copy()
+    #     X = data.copy()
+    #     y = label.copy()
 
-        x_limit = np.arange(start = X[:, 0].min() , stop =X[:, 0].max() , step =0.01)
-        y_limit = np.arange(start = X[:, 1].min() , stop =X[:, 1].max() , step =0.01)
+    #     # x_limit = [np.min(X[:, 0]), np.max(X[:, 0])]
+    #     # y_limit = [np.min(X[:, 1]), np.max(X[:, 1])]
 
-        x_mesh, y_mesh = np.meshgrid(x_limit, y_limit)
-        test = np.array([x_mesh.ravel(), y_mesh.ravel()]).T
-        Z = model.predict(test).reshape(x_mesh.shape).astype(np.int64)
-        # print(Z)
+    #     x_limit = np.arange(start = X[:, 0].min() , stop =X[:, 0].max() , step =0.01)
+    #     y_limit = np.arange(start = X[:, 1].min() , stop =X[:, 1].max() , step =0.01)
+
+
+    #     x_mesh, y_mesh = np.meshgrid(x_limit, y_limit)
+    #     test = np.array([x_mesh.ravel(), y_mesh.ravel()]).T
+    #     Z = model.predict(test).reshape(x_mesh.shape).astype(np.int64)
+    #     print(test.shape, test)
+    #     Z = model.predict(test)
+    #     # print(Z)
         
-        # Z_scaled = model.support_vector_ - model.support_vector_.min(axis=0)
-        # Z_scaled = Z_scaled / Z_scaled.max(axis=0)
+    #     # Z_scaled = model.support_vector_ - model.support_vector_.min(axis=0)
+    #     # Z_scaled = Z_scaled / Z_scaled.max(axis=0)
         
-        plt.scatter(X[y == 1, 0], X[y == 1, 1], color=ListedColormap(('r', 'b'))(0), marker='o', label='1')
-        plt.scatter(X[y == -1, 0], X[y == -1, 1], color=ListedColormap(('r', 'b'))(1), marker='x', label='-1')
-        plt.contourf(x_mesh, y_mesh, Z, alpha=0.3, levels=2, cmap=ListedColormap(('r', 'b')), zorder=1)
-        plt.xlim(x_mesh.min(), x_mesh.max())
-        plt.ylim(y_mesh.min(), y_mesh.max())
+    #     plt.scatter(X[y == 1, 0], X[y == 1, 1], color=ListedColormap(('r', 'b'))(0), marker='o', label='1')
+    #     plt.scatter(X[y == -1, 0], X[y == -1, 1], color=ListedColormap(('r', 'b'))(1), marker='x', label='-1')
+    #     plt.contourf(x_mesh, y_mesh, Z, alpha=0.3, levels=2, cmap=ListedColormap(('r', 'b')), zorder=1)
+    #     plt.xlim(x_mesh.min(), x_mesh.max())
+    #     plt.ylim(y_mesh.min(), y_mesh.max())
 
-        plt.title(plt_title)
-        plt.xlabel('x_mesh')
-        plt.ylabel('y_mesh')
-        plt.legend(loc='best')
+    #     plt.title(plt_title)
+    #     plt.xlabel('x_mesh')
+    #     plt.ylabel('y_mesh')
+    #     plt.legend(loc='best')
 
 if __name__ == '__main__':
 
-    part_one    = True
+    part_one    = False
     part_two    = False
-    part_three  = False
+    part_three  = True
     part_four   = False
     part_five   = False
 
@@ -430,17 +432,16 @@ if __name__ == '__main__':
 
 
         # Todo: decision boundry for custom model is not working
-        # fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(18, 8))
-        # custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=custom_model, axes=axs[0], plt_title="::Custom SVM::")
-        # custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=sklearn_model, axes=axs[1], plt_title="::SKLearn-SVM::")
-        # plt.show()
-
-        custom_model.get_support_vector_()
-
         fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(18, 8))
-        custom_model.decision_boundary(model=custom_model, plt_title="::Custom SVM::", data=np.array(X), label=np.array(y), ax=axs[0])
-        custom_model.decision_boundary(model=sklearn_model, plt_title="::SKLearn-SVM::", data=np.array(X), label=np.array(y), ax=axs[1])
+        custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=custom_model, axes=axs[0], plt_title="::Custom SVM::")
+        custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=sklearn_model, axes=axs[1], plt_title="::SKLearn-SVM::")
         plt.show()
+
+        # custom_model.get_support_vector_()
+        # fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(18, 8))
+        # custom_model.decision_boundary(model=custom_model, plt_title="::Custom SVM::", data=np.array(X), label=np.array(y), ax=axs[0])
+        # custom_model.decision_boundary(model=sklearn_model, plt_title="::SKLearn-SVM::", data=np.array(X), label=np.array(y), ax=axs[1])
+        # plt.show()
 
     if part_two:
         # Todo:
@@ -616,11 +617,11 @@ if __name__ == '__main__':
                                     weight=w, C=C, sigma=sigma, tolerance=0.001, max_passes=100, epsilon=1e-5)
         svm_gausssian.fit()
         
-        # fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-        # svm_gausssian.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=svm_gausssian, plt_title="::Train Data::", axes=axs[0])
-        # svm_gausssian.plot_decision_boundry_2d(data=np.array(x_validation), label=np.array(y_validation), model=svm_gausssian, plt_title="::Validation Data::", axes=axs[1])
-        # plt.show()
-
         fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-        svm_gausssian.decision_boundary(data=np.array(X), label=np.array(y), model=svm_gausssian, plt_title="::Train Data::", ax=axs[0])
+        svm_gausssian.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=svm_gausssian, plt_title="::Train Data::", axes=axs[0])
+        svm_gausssian.plot_decision_boundry_2d(data=np.array(x_validation), label=np.array(y_validation), model=svm_gausssian, plt_title="::Validation Data::", axes=axs[1])
         plt.show()
+
+        # fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+        # svm_gausssian.decision_boundary(data=np.array(X), label=np.array(y), model=svm_gausssian, plt_title="::Train Data::", ax=axs[0])
+        # plt.show()
