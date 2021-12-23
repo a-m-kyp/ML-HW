@@ -395,7 +395,7 @@ if __name__ == '__main__':
         # plot decision boundary for each C and get accuracy for each C
         # report the best C and the corresponding accuracy
         
-        dataset = pd.read_csv('d1.csv', header=None, names=['x1', 'x2', 'y'])
+        dataset = pd.read_csv("./dataset/d1.csv", header=None, names=['x1', 'x2', 'y'])
         X = dataset.iloc[:, :-1]
         y = dataset.iloc[:, -1]
         dataset['y'] = dataset['y'].replace(0, -1)
@@ -450,7 +450,7 @@ if __name__ == '__main__':
         # Verify the accuracy of implementation of gaussian kernel with below parameters
         # x_1 = [1,2,1], x_2 = [0,4,-1], sigma = 2 => 324562.0
 
-        dataset = pd.read_csv('d2.csv', header=None)
+        dataset = pd.read_csv("./dataset/d2.csv", header=None)
         X = dataset.iloc[:, :-1]
         y = dataset.iloc[:, -1]
         model = SVM_custom(X, y, kernel="gaussian", weight=np.zeros((1, X.shape[1])), alpha=np.zeros((X.shape[0])))
@@ -461,7 +461,7 @@ if __name__ == '__main__':
         # Todo:
         # Implement gaussian kernel on d2.csv
         # Consider C = 1, sigma = 0.1, tolerance = 0.001, max_passes = 5, epsilon = 0.001
-        dataset = pd.read_csv('d2.csv', header=None, names=['x1', 'x2', 'y'])
+        dataset = pd.read_csv("./dataset/d2.csv", header=None, names=['x1', 'x2', 'y'])
         X = dataset.iloc[:, :-1]
         y = dataset.iloc[:, -1]
         dataset['y'] = dataset['y'].replace(0, -1)
@@ -524,13 +524,14 @@ if __name__ == '__main__':
         z1 = custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=sklearn_model, axes=axs[1], plt_title="::SKLearn-SVM::")
         plt.show()
 
-        # save decision_function_result to txt file
-        with open('./z.txt', 'w') as f:
-            for item in z:
-                f.write("%s\n" % item)
-        with open('./z1.txt', 'w') as f:
-            for item in z1:
-                f.write("%s\n" % item)
+        if verbose:
+            # save decision_function_result to txt file
+            with open('./z.txt', 'w') as f:
+                for item in z:
+                    f.write("%s\n" % item)
+            with open('./z1.txt', 'w') as f:
+                for item in z1:
+                    f.write("%s\n" % item)
 
     if part_four:
         # Todo:
@@ -539,7 +540,7 @@ if __name__ == '__main__':
         # Then check the accuracy of each model with different C and sigma on d3-validation.csv
         # get optimal C and sigma of the model with highest accuracy
 
-        dataset = pd.read_csv('d3.csv', header=None, names=['x1', 'x2', 'y'])
+        dataset = pd.read_csv("./dataset/d3.csv", header=None, names=['x1', 'x2', 'y'])
         X = dataset.iloc[:, :-1]
         y = dataset.iloc[:, -1]
         y = y.replace(0, -1)
@@ -549,7 +550,7 @@ if __name__ == '__main__':
         y_train = y_train.reshape(-1)
         y_test = y_test.reshape(-1)
 
-        validation_set = pd.read_csv('d3-validation.csv', header=None, names=['x1', 'x2', 'y'])
+        validation_set = pd.read_csv("./dataset/d3-validation.csv", header=None, names=['x1', 'x2', 'y'])
         X_validation = validation_set.iloc[:, :-1]
         y_validation = validation_set.iloc[:, -1]
         y_validation = y_validation.replace(0, -1)
@@ -583,7 +584,7 @@ if __name__ == '__main__':
         # Plot the decision boundary of the model with highest accuracy
         # Use SVM with gaussian kernel on d3.csv and d3-validation.csv
 
-        dataset = pd.read_csv('d3.csv', header=None, names=['x1', 'x2', 'y'])
+        dataset = pd.read_csv("./dataset/d3.csv", header=None, names=['x1', 'x2', 'y'])
 
         X = dataset.iloc[:, :-1]
         y = dataset.iloc[:, -1]
@@ -594,7 +595,7 @@ if __name__ == '__main__':
         y_train = y_train.reshape(-1)
         y_test = y_test.reshape(-1)
 
-        df = pd.read_csv("d3-validation.csv", header=None, names=['x1', 'x2', 'y'])
+        df = pd.read_csv("./dataset/d3-validation.csv", header=None, names=['x1', 'x2', 'y'])
         print(df.head().reset_index())
         df['y'] = df['y'].replace(0, -1) # 2 class problem
 
