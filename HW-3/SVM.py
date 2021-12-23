@@ -111,7 +111,6 @@ class SVM_custom:
                     while j == i:
                         # get j from 0 to num_sample-1
                         j = np.random.randint(0, num_sample)
-
                     # print("i, j: ", i, j)
 
                     ############################################################
@@ -129,7 +128,6 @@ class SVM_custom:
                     ############################################################
                     # H, L: upper and lower bounds for alpha_sample_j (L <= alpha_j <= H)
                     ############################################################
-
                     '''
                     x_i     X_j
                     -1      -1   -> if label[i] == label[j] = 1  where  -1 * -1 =  1
@@ -254,8 +252,6 @@ class SVM_custom:
     def fit(self):
         self.sequential_minimal_optimization()
         return self.alpha, self.b, self.weight
-
-
 
     def decision_function(self, data):
         # w_0, w_1 = self.weight[0]
@@ -383,11 +379,11 @@ if __name__ == '__main__':
 
     part_one    = False
     part_two    = False
-    part_three  = False
+    part_three  = True
 
     # check part_four and part_five True to get optimal result generated in part_four for part five
     part_four   = False
-    part_five   = True
+    part_five   = False
 
     # Todo: decision_boundary result is not correct and need to be fixed
     # accuracy is at half of the optimal result and need to be fixed
@@ -475,8 +471,8 @@ if __name__ == '__main__':
 
         C = 1
         b = 0
-        sigma = 0.1
-        max_passes = 5
+        sigma = 1
+        max_passes = 1000
         verbose = False
         epsilon = 1e-5
         tolerance = 0.001
@@ -519,8 +515,7 @@ if __name__ == '__main__':
         # dec_func_vec = -1 * (dual_coef.dot(np.exp(-sigma* (norm2**2)))) - intercept
         # print("decision_function: ", dec_func_vec)
 
-
-        sklearn_model = SVC(kernel='rbf', C=C, tol=tolerance, max_iter=max_passes, gamma=sigma, verbose=verbose)
+        sklearn_model = SVC(kernel='rbf', C=C, tol=tolerance, max_iter=max_passes, verbose=False, gamma=sigma)
         sklearn_model.fit(x_train, y_train)
 
         # plot decision boundary
@@ -528,7 +523,6 @@ if __name__ == '__main__':
         z = custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=custom_model, axes=axs[0], plt_title="::Custom SVM::")
         z1 = custom_model.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=sklearn_model, axes=axs[1], plt_title="::SKLearn-SVM::")
         plt.show()
-
 
         # save decision_function_result to txt file
         with open('./z.txt', 'w') as f:
