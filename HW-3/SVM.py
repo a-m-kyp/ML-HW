@@ -384,6 +384,8 @@ if __name__ == '__main__':
     part_one    = False
     part_two    = False
     part_three  = False
+
+    # check part_four and part_five True to get optimal result for part five
     part_four   = False
     part_five   = True
 
@@ -597,8 +599,7 @@ if __name__ == '__main__':
 
         df = pd.read_csv("d3-validation.csv", header=None, names=['x1', 'x2', 'y'])
         print(df.head().reset_index())
-        # replace 0 to -1 in column y
-        df['y'] = df['y'].replace(0, -1)
+        df['y'] = df['y'].replace(0, -1) # 2 class problem
 
         x_validation = df.iloc[:, :-1]
         y_validation = df.iloc[:, -1]
@@ -613,15 +614,13 @@ if __name__ == '__main__':
         sigma = 0.001
         w = np.zeros((1, x_train.shape[1]))
         alpha = np.zeros((x_train.shape[0]))
-        svm_gausssian = SVM_custom(data=x_train, label=y_train, kernel="gaussian", b=b, alpha=alpha, 
-                                    weight=w, C=C, sigma=sigma, tolerance=0.001, max_passes=100, epsilon=1e-5)
+        if part_four:
+            svm_gausssian = SVM_custom(data=x_train, label=y_train, kernel="gaussian", b=b, alpha=alpha, weight=w, C=optimal_C, sigma=optimal_sigma, tolerance=0.001, max_passes=100, epsilon=1e-5)
+        else:
+            svm_gausssian = SVM_custom(data=x_train, label=y_train, kernel="gaussian", b=b, alpha=alpha, weight=w, C=C, sigma=sigma, tolerance=0.001, max_passes=100, epsilon=1e-5)
         svm_gausssian.fit()
         
         fig, axs = plt.subplots(1, 2, figsize=(10, 5))
         svm_gausssian.plot_decision_boundry_2d(data=np.array(X), label=np.array(y), model=svm_gausssian, plt_title="::Train Data::", axes=axs[0])
         svm_gausssian.plot_decision_boundry_2d(data=np.array(x_validation), label=np.array(y_validation), model=svm_gausssian, plt_title="::Validation Data::", axes=axs[1])
         plt.show()
-
-        # fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-        # svm_gausssian.decision_boundary(data=np.array(X), label=np.array(y), model=svm_gausssian, plt_title="::Train Data::", ax=axs[0])
-        # plt.show()
