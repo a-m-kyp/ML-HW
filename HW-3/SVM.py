@@ -375,6 +375,12 @@ class SVM_custom:
     #     plt.ylabel('y_mesh')
     #     plt.legend(loc='best')
 
+    # Todo:
+    # Add optimization with Gradient Descent 
+    # Add support for multi-class classification
+    # Fix  decision function
+
+
 if __name__ == '__main__':
 
     part_one    = False
