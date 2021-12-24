@@ -379,6 +379,7 @@ class SVM_custom:
     # Add optimization with Gradient Descent 
     # Add support for multi-class classification
     # Fix  decision function
+    # Add Accuracy Curve - Fit Curve
 
 
 if __name__ == '__main__':
